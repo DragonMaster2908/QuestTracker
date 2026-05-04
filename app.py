@@ -179,6 +179,21 @@ def serve_manifest():
 def serve_sw():
     return send_from_directory('templates', 'sw.js')
 
+@app.route('/api/save-subscription', methods=['POST'])
+def save_subscription():
+    email = get_verified_email() # Uses the helper we built earlier
+    if not email:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+    
+    subscription_data = request.json
+    
+    # We store the subscription object inside the user's save data
+    data = load_data(email)
+    data['subscription'] = subscription_data
+    save_data(data, email)
+    
+    return jsonify({"status": "success", "message": "Subscription saved!"})
+
 if __name__ == '__main__':
     # Use the port assigned by the cloud host, or default to 5000
     port = int(os.environ.get('PORT', 5000))

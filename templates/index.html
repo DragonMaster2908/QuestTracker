@@ -4,172 +4,208 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quest Board</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#6200ee">
-    
+    <meta name="theme-color" content="#bb86fc">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --bg-color: #f1f5f9; --card-bg: #ffffff; --text-main: #334155; --text-muted: #64748b; --border-color: #e2e8f0; 
-            --primary: #6366f1; --primary-hover: #e0e7ff; --success: #10b981; --danger: #f43f5e; --warning: #f59e0b; --bar-bg: #e2e8f0; 
+            --primary: #bb86fc;
+            --bg: #121212;
+            --card-bg: #1e1e1e;
+            --text: #e1e1e1;
+            --danger: #cf6679;
+            --success: #03dac6;
         }
-        body.dark-mode {
-            --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; --border-color: #334155; 
-            --primary-hover: #312e81; --bar-bg: #334155; 
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 15px;
+            overflow-x: hidden;
         }
 
-        body { font-family: 'Inter', system-ui, sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; color: var(--text-main); }
-        body, .dashboard, .tab-btn, .task-list, .forge-panel, .forge-input, .dropdown-menu { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
-        .app-container { width: 95%; max-width: 1400px; margin: 20px auto; }
+        /* Responsive Container */
+        #app { max-width: 600px; margin: 0 auto; }
 
-        /* AUTH SCREEN STYLES */
-        .auth-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; }
-        .auth-card { background: var(--card-bg); padding: 40px; border-radius: 15px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid var(--border-color); width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
-        .auth-card h1 { margin: 0 0 10px 0; color: var(--primary); font-weight: 800; text-align: center; }
-        .auth-card input { padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; background: var(--bg-color); color: var(--text-main); }
-        .auth-card button { padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; color: white; }
-        .btn-login { background: var(--primary); }
-        .btn-signup { background: var(--success); }
-        .auth-card button:hover { filter: brightness(1.1); }
-        .auth-error { color: var(--danger); font-size: 14px; text-align: center; display: none; margin-top: -5px; }
+        /* Fix for mobile text overflow */
+        .task-item {
+            background: var(--card-bg);
+            margin: 12px 0;
+            padding: 16px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column; /* Stacked on mobile */
+            gap: 12px;
+            border-left: 4px solid var(--primary);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
 
-        /* MAIN UI STYLES */
-        .dashboard { background: var(--card-bg); border-radius: 15px; padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid var(--border-color); }
-        .stats { flex-grow: 1; }
-        .bar-container { background: var(--bar-bg); border-radius: 10px; height: 16px; margin: 5px 0 15px 0; overflow: hidden; }
-        .hp-bar { background: var(--danger); height: 100%; transition: width 0.4s ease-in-out; border-radius: 10px; }
-        .xp-bar { background: var(--success); height: 100%; transition: width 0.4s ease-in-out; border-radius: 10px; }
-        
-        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 12px; border: none; background: var(--card-bg); color: var(--text-muted); border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; border: 1px solid var(--border-color); }
-        .tab-btn:hover { background: var(--primary-hover); color: var(--primary); }
-        .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 6px rgba(99, 102, 241, 0.25); }
-        
-        .task-list { background: var(--card-bg); border-radius: 15px; padding: 20px; min-height: 300px; border: 1px solid var(--border-color); }
-        .task-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); font-size: 16px; }
-        .task-item:last-child { border-bottom: none; }
-        .task-item input[type="checkbox"] { margin-right: 15px; width: 20px; height: 20px; cursor: pointer; accent-color: var(--success); }
-        .task-item.failed { color: var(--danger); text-decoration: line-through; opacity: 0.7; }
-        .tags { font-size: 13px; color: var(--text-muted); font-weight: 400; margin-left: 10px; background: var(--bg-color); padding: 2px 8px; border-radius: 12px; }
+        @media (min-width: 480px) {
+            .task-item { flex-direction: row; align-items: center; justify-content: space-between; }
+        }
 
-        .forge-panel { background: var(--card-bg); border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--border-color); }
-        .forge-input { padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 15px; background: var(--card-bg); color: var(--text-main); outline: none; }
-        .forge-input:focus { border-color: var(--primary); }
-        .forge-btn { padding: 10px 20px; background-color: var(--success); color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; }
-        
-        .task-actions { margin-left: auto; position: relative; }
-        .kebab-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); padding: 0 10px; border-radius: 4px; }
-        .kebab-btn:hover { color: var(--text-main); background: var(--bg-color); }
-        .dropdown-menu { display: none; position: absolute; right: 0; top: 100%; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); z-index: 10; min-width: 140px; padding: 4px 0; }
-        .dropdown-menu.show { display: block; }
-        .dropdown-item { padding: 8px 16px; font-size: 14px; cursor: pointer; color: var(--text-main); }
-        .dropdown-item:hover { background: var(--bg-color); }
-        .dropdown-item.danger { color: var(--danger); }
+        .task-info { flex: 1; min-width: 0; } /* min-width: 0 allows text wrapping */
+
+        .task-name { 
+            font-weight: 600; 
+            font-size: 1.1rem; 
+            word-wrap: break-word; 
+            overflow-wrap: break-word;
+        }
+
+        .tags {
+            font-size: 0.85rem;
+            color: var(--primary);
+            display: flex;
+            flex-wrap: wrap; /* Wraps day/time tags to next line */
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        /* Forge Labels (Placeholders fix) */
+        .forge-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 15px; }
+        .input-label { font-size: 11px; font-weight: bold; color: var(--primary); text-transform: uppercase; }
+
+        input, select {
+            background: #2c2c2c;
+            border: 1px solid #444;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px; /* Prevents iOS zoom-on-focus */
+        }
+
+        /* Notification Toggle */
+        .notif-banner {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* Toast UI */
+        #toast {
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            padding: 12px 24px;
+            border-radius: 50px;
+            border-left: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            z-index: 10000;
+        }
     </style>
 </head>
 <body>
 
-    <!-- AUTHENTICATION SCREEN -->
-    <div id="authScreen" class="auth-container">
-        <div class="auth-card">
-            <h1>Quest Board</h1>
-            <p style="text-align: center; color: var(--text-muted); margin-top: -10px;">Login or create an account</p>
-            <div id="authError" class="auth-error">Error message here</div>
-            <input type="email" id="authEmail" placeholder="Email Address">
-            <input type="password" id="authPassword" placeholder="Password">
-            <button class="btn-login" onclick="handleAuth('/api/auth/login')">Log In</button>
-            <button class="btn-signup" onclick="handleAuth('/api/auth/signup')">Sign Up</button>
-        </div>
+<div id="app">
+    <div id="header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 id="userNameDisplay">Welcome, Ojas</h2>
+        <button onclick="requestNotificationPermission()" id="notifBtn" style="background: none; border: none; color: var(--primary); font-size: 1.2rem;">
+            <i class="fa-regular fa-bell"></i>
+        </button>
     </div>
 
-    <!-- MAIN APPLICATION (Hidden by default) -->
-    <div id="mainApp" class="app-container" style="display: none;">
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h1 style="margin: 0; color: var(--text-main); font-weight: 800; letter-spacing: -1px;">Quest Board</h1>
-            <div style="display: flex; gap: 10px;">
-                <button id="themeToggle" onclick="toggleTheme()" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); font-size: 20px; padding: 8px 12px; border-radius: 8px; cursor: pointer;">🌙</button>
-                <button onclick="logout()" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--danger); font-size: 14px; font-weight: bold; padding: 8px 12px; border-radius: 8px; cursor: pointer;">Log Out</button>
-            </div>
-        </div>
-
-        <div class="dashboard">
-            <canvas id="avatarCanvas" width="80" height="80" style="background: var(--bg-color); border-radius: 10px; border: 1px solid var(--border-color);"></canvas>
-            <div class="stats">
-                
-                <!-- NEW: Personalized Header -->
-                <h2 style="margin: 0 0 10px 0; color: var(--primary); font-weight: 800;">
-                    <span id="userNameDisplay">Hero</span> 
-                    <span id="levelText" style="font-weight: 400; font-size: 14px; color: var(--text-muted);"> (lvl 1)</span>
-                </h2>
-                
-                <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 13px; color: var(--text-muted);">
-                    <span style="color: var(--danger);">HP</span> <span id="hpText">- / -</span>
-                </div>
-                <div class="bar-container"><div id="hpBar" class="hp-bar" style="width: 0%;"></div></div>
-                
-                <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 13px; color: var(--text-muted);">
-                    <span style="color: var(--success);">XP</span> <span id="xpText">- / -</span>
-                </div>
-                <div class="bar-container"><div id="xpBar" class="xp-bar" style="width: 0%;"></div></div>
-            </div>
-        </div>
-
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('daily')">Daily</button>
-            <button class="tab-btn" onclick="switchTab('weekly')">Weekly</button>
-            <button class="tab-btn" onclick="switchTab('todo')">To-Do</button>
-        </div>
-
-        <div class="forge-panel">
-            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                <input type="text" id="newTaskName" class="forge-input" placeholder="Enter new quest..." style="flex-grow: 1; min-width: 200px;">
-                <input type="time" id="newTime" class="forge-input" title="Target Time">
-                <input type="date" id="newDate" class="forge-input" style="display: none;" title="Target Date">
-                <select id="newDifficulty" class="forge-input">
-                    <option value="Trivial">Trivial</option>
-                    <option value="Easy">Easy</option>
-                    <option value="Medium" selected>Medium</option>
-                    <option value="Hard">Hard</option>
-                    <option value="Epic">Epic</option>
-                </select>
-                <button id="forgeBtn" class="forge-btn" onclick="addTask()">Forge</button>            
-            </div>
-            <div id="weeklyDaysContainer" style="display: none; gap: 15px; font-size: 14px; font-weight: 600; color: var(--text-muted); padding-left: 5px; align-items: center;">
-                <span>Select Days:</span>
-                <label><input type="checkbox" value="Mon" class="day-cb"> Mon</label>
-                <label><input type="checkbox" value="Tue" class="day-cb"> Tue</label>
-                <label><input type="checkbox" value="Wed" class="day-cb"> Wed</label>
-                <label><input type="checkbox" value="Thu" class="day-cb"> Thu</label>
-                <label><input type="checkbox" value="Fri" class="day-cb"> Fri</label>
-                <label><input type="checkbox" value="Sat" class="day-cb"> Sat</label>
-                <label><input type="checkbox" value="Sun" class="day-cb"> Sun</label>
-            </div>
-        </div>
-
-        <div class="forge-panel" style="flex-direction: row; justify-content: space-between; align-items: center;">
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <span style="font-size: 14px; font-weight: 600; color: var(--text-muted);">View:</span>
-                <select id="taskFilter" class="forge-input" onchange="renderTasks()" style="padding: 6px 10px;">
-                    <option value="all">All Quests</option>
-                    <option value="pending">Pending Only</option>
-                    <option value="completed">Completed Only</option>
-                </select>
-            </div>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <span style="font-size: 14px; font-weight: 600; color: var(--text-muted);">Sort:</span>
-                <select id="taskSort" class="forge-input" onchange="renderTasks()" style="padding: 6px 10px;">
-                    <option value="time">By Time</option>
-                    <option value="difficulty">By Difficulty (Hardest First)</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="task-list" id="taskList"></div>
+    <!-- Notification Setup Banner (Hidden if permission granted) -->
+    <div id="notifBanner" class="notif-banner" style="display: none;">
+        <span>Enable mobile alerts for tasks?</span>
+        <button onclick="requestNotificationPermission()" style="background: var(--primary); border: none; color: black; padding: 5px 10px; border-radius: 4px; font-weight: bold;">Enable</button>
     </div>
 
-    <script>
-        // --- THEME ENGINE ---
+    <!-- Task List Container -->
+    <div id="taskList"></div>
+</div>
+
+<div id="toast"><span id="toastMsg"></span></div>
+
+<script>
+    const VAPID_PUBLIC_KEY = "BOc_goJ2q_CCxYFbAwyJFkJJvYUgGRlvnLuN7-TXGrvArtU5zoX2howB34LGJMS2UvMwFP9GltN9EMlkbBWRukU";
+    // 1. PWA Engine
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js');
+        });
+    }
+
+    // 2. Toast System
+    function showStatus(msg, isError = false) {
+        const toast = document.getElementById('toast');
+        const msgEl = document.getElementById('toastMsg');
+        msgEl.style.color = isError ? 'var(--danger)' : 'var(--success)';
+        msgEl.innerText = msg;
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
+    }
+
+    // 3. Mobile Alert Setup (Phase 1: Permission)
+    function requestNotificationPermission() {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                showStatus("Alerts enabled!");
+                document.getElementById('notifBanner').style.display = 'none';
+                document.getElementById('notifBtn').style.color = 'var(--success)';
+                // Phase 2 logic will go here to save subscription to Supabase
+            } else {
+                showStatus("Alerts blocked", true);
+            }
+        });
+    }
+
+    // Check permission on load
+    if (Notification.permission === 'default') {
+        document.getElementById('notifBanner').style.display = 'flex';
+    }
+
+    // Helper to convert the VAPID key format
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
+        return outputArray;
+    }
+
+    async function requestNotificationPermission() {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            const registration = await navigator.serviceWorker.ready;
+            
+            // Create the subscription
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+            });
+
+            // Send it to your Flask server
+            const response = await fetch('/api/save-subscription', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('supabase_token')}` // Ensure you store your token
+                },
+                body: JSON.stringify(subscription)
+            });
+
+            if (response.ok) {
+                showStatus("Alerts fully synced!");
+                document.getElementById('notifBanner').style.display = 'none';
+            }
+        } else {
+            showStatus("Permission denied", true);
+        }
+    }
+
+    // --- THEME ENGINE ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')

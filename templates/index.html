@@ -2,522 +2,383 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest Board</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ojas Quest Board</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#bb86fc">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --primary: #bb86fc;
-            --bg: #121212;
-            --card-bg: #1e1e1e;
-            --text: #e1e1e1;
-            --danger: #cf6679;
-            --success: #03dac6;
+            --primary: #bb86fc; --bg: #121212; --card-bg: #1e1e1e;
+            --text: #e1e1e1; --danger: #cf6679; --success: #03dac6; --warning: #f1c40f;
         }
 
         body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            margin: 0;
-            padding: 15px;
-            overflow-x: hidden;
+            background-color: var(--bg); color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0; padding: 15px; overflow-x: hidden;
         }
 
-        /* Responsive Container */
         #app { max-width: 600px; margin: 0 auto; }
 
-        /* Fix for mobile text overflow */
-        .task-item {
-            background: var(--card-bg);
-            margin: 12px 0;
-            padding: 16px;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column; /* Stacked on mobile */
-            gap: 12px;
-            border-left: 4px solid var(--primary);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        /* --- RPG Dashboard --- */
+        .dashboard {
+            background: var(--card-bg); padding: 15px; border-radius: 15px;
+            display: flex; align-items: center; gap: 15px; margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .stats { flex: 1; }
+        .bar-container { background: #333; height: 10px; border-radius: 5px; margin: 5px 0; overflow: hidden; }
+        .bar-fill { height: 100%; transition: width 0.4s ease; }
+        #hpFill { background: var(--danger); }
+        #xpFill { background: var(--primary); }
+
+        /* --- The Forge (Input Area) --- */
+        .forge-panel {
+            background: var(--card-bg); padding: 20px; border-radius: 15px;
+            margin-bottom: 20px; border: 1px solid #333;
+        }
+        .forge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+        .forge-group { display: flex; flex-direction: column; gap: 4px; }
+        .input-label { font-size: 10px; font-weight: bold; color: var(--primary); text-transform: uppercase; }
+        input, select {
+            background: #2c2c2c; border: 1px solid #444; color: white;
+            padding: 10px; border-radius: 8px; font-size: 16px;
         }
 
+        /* --- Tabs & Filters --- */
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .tab-btn {
+            padding: 8px 16px; border-radius: 20px; background: #252525;
+            border: none; color: var(--text); white-space: nowrap; cursor: pointer;
+        }
+        .tab-btn.active { background: var(--primary); color: black; font-weight: bold; }
+
+        /* --- Task Items (Mobile Fixes) --- */
+        .task-item {
+            background: var(--card-bg); margin-bottom: 12px; padding: 16px;
+            border-radius: 12px; border-left: 4px solid var(--primary);
+            display: flex; flex-direction: column; gap: 10px;
+        }
         @media (min-width: 480px) {
             .task-item { flex-direction: row; align-items: center; justify-content: space-between; }
         }
-
-        .task-info { flex: 1; min-width: 0; } /* min-width: 0 allows text wrapping */
-
-        .task-name { 
-            font-weight: 600; 
-            font-size: 1.1rem; 
-            word-wrap: break-word; 
-            overflow-wrap: break-word;
-        }
-
+        .task-info { flex: 1; min-width: 0; }
+        .task-name { font-weight: 600; font-size: 1.1rem; word-wrap: break-word; }
         .tags {
-            font-size: 0.85rem;
-            color: var(--primary);
-            display: flex;
-            flex-wrap: wrap; /* Wraps day/time tags to next line */
-            gap: 8px;
-            margin-top: 4px;
+            font-size: 0.85rem; color: var(--primary); display: flex;
+            flex-wrap: wrap; gap: 8px; margin-top: 4px;
         }
+        .completed { opacity: 0.5; border-left-color: var(--success); }
+        .completed .task-name { text-decoration: line-through; }
 
-        /* Forge Labels (Placeholders fix) */
-        .forge-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 15px; }
-        .input-label { font-size: 11px; font-weight: bold; color: var(--primary); text-transform: uppercase; }
-
-        input, select {
-            background: #2c2c2c;
-            border: 1px solid #444;
-            color: white;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 16px; /* Prevents iOS zoom-on-focus */
-        }
-
-        /* Notification Toggle */
-        .notif-banner {
-            background: #2a2a2a;
-            padding: 10px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-        }
-
-        /* Toast UI */
+        /* --- Utility --- */
         #toast {
-            display: none;
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #333;
-            padding: 12px 24px;
-            border-radius: 50px;
-            border-left: none;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            z-index: 10000;
+            display: none; position: fixed; bottom: 30px; left: 50%;
+            transform: translateX(-50%); background: #333; padding: 12px 24px;
+            border-radius: 50px; z-index: 10000; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+        .auth-screen {
+            display: flex; flex-direction: column; gap: 15px; height: 80vh;
+            justify-content: center; align-items: center;
         }
     </style>
 </head>
 <body>
 
 <div id="app">
-    <div id="header" style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 id="userNameDisplay">Welcome, Ojas</h2>
-        <button onclick="requestNotificationPermission()" id="notifBtn" style="background: none; border: none; color: var(--primary); font-size: 1.2rem;">
-            <i class="fa-regular fa-bell"></i>
-        </button>
+    <!-- Auth Screen -->
+    <div id="authScreen" class="auth-screen" style="display: none;">
+        <h2>Quest Board Login</h2>
+        <input type="email" id="authEmail" placeholder="Email">
+        <input type="password" id="authPassword" placeholder="Password">
+        <div style="display: flex; gap: 10px;">
+            <button onclick="handleAuth('/api/auth/login')" style="background: var(--primary); padding: 10px 20px; border-radius: 8px; border: none;">Login</button>
+            <button onclick="handleAuth('/api/auth/signup')" style="background: none; border: 1px solid var(--primary); color: var(--primary); padding: 10px 20px; border-radius: 8px;">Sign Up</button>
+        </div>
+        <p id="authError" style="color: var(--danger); display: none;"></p>
     </div>
 
-    <!-- Notification Setup Banner (Hidden if permission granted) -->
-    <div id="notifBanner" class="notif-banner" style="display: none;">
-        <span>Enable mobile alerts for tasks?</span>
-        <button onclick="requestNotificationPermission()" style="background: var(--primary); border: none; color: black; padding: 5px 10px; border-radius: 4px; font-weight: bold;">Enable</button>
-    </div>
+    <!-- Main App -->
+    <div id="mainApp" style="display: none;">
+        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <div>
+                <span id="userNameDisplay" style="font-size: 1.5rem; font-weight: bold;">Ojas</span>
+                <span id="levelText" style="color: var(--primary); font-size: 0.9rem;"></span>
+            </div>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <i class="fa-regular fa-bell" id="notifBtn" onclick="requestNotificationPermission()" style="cursor: pointer;"></i>
+                <i class="fa-solid fa-arrow-right-from-bracket" onclick="logout()" style="cursor: pointer; opacity: 0.7;"></i>
+            </div>
+        </header>
 
-    <!-- Task List Container -->
-    <div id="taskList"></div>
+        <!-- Player Dashboard -->
+        <div class="dashboard">
+            <canvas id="avatarCanvas" width="80" height="80" style="image-rendering: pixelated;"></canvas>
+            <div class="stats">
+                <div class="input-label">Health (HP)</div>
+                <div class="bar-container"><div id="hpFill" class="bar-fill"></div></div>
+                <div class="input-label">Experience (XP)</div>
+                <div class="bar-container"><div id="xpFill" class="bar-fill"></div></div>
+                <div style="font-size: 10px; display: flex; justify-content: space-between; margin-top: 2px;">
+                    <span id="hpText">100/100</span>
+                    <span id="xpText">0/100</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- The Forge (Add/Edit Task) -->
+        <div class="forge-panel">
+            <input type="text" id="newTaskName" placeholder="Enter quest name..." style="width: 100%; box-sizing: border-box;">
+            <div class="forge-grid">
+                <div class="forge-group">
+                    <label class="input-label">Difficulty</label>
+                    <select id="newDifficulty">
+                        <option>Trivial</option><option>Easy</option><option selected>Medium</option><option>Hard</option><option>Epic</option>
+                    </select>
+                </div>
+                <div class="forge-group">
+                    <label class="input-label">Target Time</label>
+                    <input type="time" id="newTime">
+                </div>
+                <div class="forge-group" id="todoDateGroup" style="display: none;">
+                    <label class="input-label">Due Date</label>
+                    <input type="date" id="newDate">
+                </div>
+            </div>
+            
+            <!-- Weekly Days Selector -->
+            <div id="weeklyDaysContainer" style="display: none; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
+                <label class="input-label" style="width: 100%;">Repeat on:</label>
+                <label><input type="checkbox" class="day-cb" value="Mon"> M</label>
+                <label><input type="checkbox" class="day-cb" value="Tue"> T</label>
+                <label><input type="checkbox" class="day-cb" value="Wed"> W</label>
+                <label><input type="checkbox" class="day-cb" value="Thu"> T</label>
+                <label><input type="checkbox" class="day-cb" value="Fri"> F</label>
+                <label><input type="checkbox" class="day-cb" value="Sat"> S</label>
+                <label><input type="checkbox" class="day-cb" value="Sun"> S</label>
+            </div>
+
+            <button id="forgeBtn" onclick="addTask()" style="width: 100%; margin-top: 15px; padding: 12px; border-radius: 8px; border: none; background: var(--success); color: black; font-weight: bold; cursor: pointer;">FORGE QUEST</button>
+        </div>
+
+        <!-- View Controls -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('daily')">Dailies</button>
+            <button class="tab-btn" onclick="switchTab('weekly')">Weeklies</button>
+            <button class="tab-btn" onclick="switchTab('todo')">To-Do</button>
+        </div>
+
+        <!-- Task List -->
+        <div id="taskList"></div>
+    </div>
 </div>
 
 <div id="toast"><span id="toastMsg"></span></div>
 
 <script>
     const VAPID_PUBLIC_KEY = "BOc_goJ2q_CCxYFbAwyJFkJJvYUgGRlvnLuN7-TXGrvArtU5zoX2howB34LGJMS2UvMwFP9GltN9EMlkbBWRukU";
-    // 1. PWA Engine
+    let appData = {};
+    let currentTab = 'daily';
+    let editingTaskName = null;
+
+    // --- PWA & SW ---
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js');
         });
     }
 
-    // 2. Toast System
-    function showStatus(msg, isError = false) {
-        const toast = document.getElementById('toast');
-        const msgEl = document.getElementById('toastMsg');
-        msgEl.style.color = isError ? 'var(--danger)' : 'var(--success)';
-        msgEl.innerText = msg;
-        toast.style.display = 'block';
-        setTimeout(() => toast.style.display = 'none', 3000);
+    // --- Auth Logic ---
+    async function handleAuth(endpoint) {
+        const email = document.getElementById('authEmail').value;
+        const password = document.getElementById('authPassword').value;
+        const res = await fetch(endpoint, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            localStorage.setItem('qb_token', data.token);
+            localStorage.setItem('qb_email', email);
+            checkAuth();
+        } else {
+            const err = document.getElementById('authError');
+            err.innerText = data.message || "Auth failed"; err.style.display = 'block';
+        }
     }
 
-    // 3. Mobile Alert Setup (Phase 1: Permission)
-    function requestNotificationPermission() {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                showStatus("Alerts enabled!");
-                document.getElementById('notifBanner').style.display = 'none';
-                document.getElementById('notifBtn').style.color = 'var(--success)';
-                // Phase 2 logic will go here to save subscription to Supabase
-            } else {
-                showStatus("Alerts blocked", true);
-            }
+    function checkAuth() {
+        const token = localStorage.getItem('qb_token');
+        if (token) {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            fetchApp();
+        } else {
+            document.getElementById('authScreen').style.display = 'flex';
+            document.getElementById('mainApp').style.display = 'none';
+        }
+    }
+
+    function logout() { localStorage.clear(); location.reload(); }
+
+    // --- Game & Task Engine ---
+    async function fetchApp() {
+        const res = await fetch('/api/data', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('qb_token')}` }
+        });
+        if (res.status === 401) logout();
+        appData = await res.json();
+        updateDashboard();
+        renderTasks();
+    }
+
+    function updateDashboard() {
+        const p = appData.player;
+        const max_xp = Math.floor(100 * Math.pow(1.10, p.level - 1));
+        document.getElementById('levelText').innerText = ` (Lvl ${p.level})`;
+        document.getElementById('hpText').innerText = `${p.hp}/${p.max_hp}`;
+        document.getElementById('xpText').innerText = `${p.current_xp}/${max_xp}`;
+        document.getElementById('hpFill').style.width = `${(p.hp / p.max_hp) * 100}%`;
+        document.getElementById('xpFill').style.width = `${(p.current_xp / max_xp) * 100}%`;
+        drawAvatar(p.level);
+    }
+
+    function renderTasks() {
+        const container = document.getElementById('taskList');
+        container.innerHTML = '';
+        const tasks = appData[currentTab] || {};
+        
+        Object.entries(tasks).forEach(([name, details]) => {
+            const div = document.createElement('div');
+            div.className = `task-item ${details.state === 1 ? 'completed' : ''}`;
+            
+            let timeTag = details.target_time ? `<span><i class="fa-regular fa-clock"></i> ${details.target_time}</span>` : '';
+            let dateTag = details.target_date ? `<span><i class="fa-regular fa-calendar"></i> ${details.target_date}</span>` : '';
+            let daysTag = (currentTab === 'weekly' && details.days) ? `<span><i class="fa-solid fa-repeat"></i> ${details.days.join(', ')}</span>` : '';
+
+            div.innerHTML = `
+                <div class="task-info">
+                    <div class="task-name">${name}</div>
+                    <div class="tags">
+                        <span><i class="fa-solid fa-bolt"></i> ${details.difficulty}</span>
+                        ${timeTag} ${dateTag} ${daysTag}
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <i class="fa-solid fa-trash" style="color: var(--danger); opacity: 0.5;" onclick="deleteTask('${name}')"></i>
+                    <i class="fa-solid ${details.state === 1 ? 'fa-circle-check' : 'fa-circle'}" 
+                       style="font-size: 1.8rem; color: ${details.state === 1 ? 'var(--success)' : '#444'}" 
+                       onclick="toggleTask('${name}', ${details.state === 1 ? 0 : 1})"></i>
+                </div>
+            `;
+            container.appendChild(div);
         });
     }
 
-    // Check permission on load
-    if (Notification.permission === 'default') {
-        document.getElementById('notifBanner').style.display = 'flex';
+    async function toggleTask(name, state) {
+        await fetch('/api/task/toggle', {
+            method: 'POST', headers: getHeaders(),
+            body: JSON.stringify({ category: currentTab, task_name: name, state: state })
+        });
+        fetchApp();
     }
 
-    // Helper to convert the VAPID key format
-    function urlBase64ToUint8Array(base64String) {
-        const padding = '='.repeat((4 - base64String.length % 4) % 4);
-        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-        for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
-        return outputArray;
+    async function addTask() {
+        const name = document.getElementById('newTaskName').value;
+        if(!name) return showStatus("Quest name required", true);
+        
+        const payload = {
+            category: currentTab, task_name: name,
+            difficulty: document.getElementById('newDifficulty').value,
+            target_time: document.getElementById('newTime').value || null
+        };
+
+        if (currentTab === 'weekly') {
+            payload.days = Array.from(document.querySelectorAll('.day-cb:checked')).map(cb => cb.value);
+        }
+        if (currentTab === 'todo') {
+            payload.target_date = document.getElementById('newDate').value || null;
+        }
+
+        const res = await fetch('/api/task/add', {
+            method: 'POST', headers: getHeaders(), body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+            document.getElementById('newTaskName').value = '';
+            fetchApp();
+            showStatus("Quest Forged!");
+        }
     }
 
+    async function deleteTask(name) {
+        if (!confirm("Delete this quest?")) return;
+        await fetch('/api/task/delete', {
+            method: 'POST', headers: getHeaders(),
+            body: JSON.stringify({ category: currentTab, task_name: name })
+        });
+        fetchApp();
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById('weeklyDaysContainer').style.display = tab === 'weekly' ? 'flex' : 'none';
+        document.getElementById('todoDateGroup').style.display = tab === 'todo' ? 'flex' : 'none';
+        renderTasks();
+    }
+
+    // --- Notification Handshake ---
     async function requestNotificationPermission() {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
             const registration = await navigator.serviceWorker.ready;
-            
-            // Create the subscription
             const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
             });
-
-            // Send it to your Flask server
-            const response = await fetch('/api/save-subscription', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('supabase_token')}` // Ensure you store your token
-                },
-                body: JSON.stringify(subscription)
+            await fetch('/api/save-subscription', {
+                method: 'POST', headers: getHeaders(), body: JSON.stringify(subscription)
             });
-
-            if (response.ok) {
-                showStatus("Alerts fully synced!");
-                document.getElementById('notifBanner').style.display = 'none';
-            }
-        } else {
-            showStatus("Permission denied", true);
+            showStatus("Alerts Enabled!");
+            document.getElementById('notifBtn').style.color = 'var(--success)';
         }
     }
 
-    // --- THEME ENGINE ---
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('Service Worker Registered'))
-                    .catch(err => console.log('Service Worker Failed', err));
-            });
-        }
+    // --- Helpers ---
+    function getHeaders() {
+        return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('qb_token')}` };
+    }
 
-        const themeToggleBtn = document.getElementById('themeToggle');
-        function applyTheme(isDark) {
-            document.body.classList.toggle('dark-mode', isDark);
-            themeToggleBtn.innerText = isDark ? '☀️' : '🌙';
-        }
-        function initTheme() {
-            const savedTheme = localStorage.getItem('habitTrackerTheme');
-            if (savedTheme !== null) applyTheme(savedTheme === 'dark'); 
-            else applyTheme(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        }
-        function toggleTheme() {
-            const newThemeIsDark = !document.body.classList.contains('dark-mode');
-            applyTheme(newThemeIsDark);
-            localStorage.setItem('habitTrackerTheme', newThemeIsDark ? 'dark' : 'light');
-        }
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-            if (localStorage.getItem('habitTrackerTheme') === null) applyTheme(e.matches);
-        });
-        initTheme();
+    function showStatus(msg, isErr = false) {
+        const t = document.getElementById('toast');
+        const m = document.getElementById('toastMsg');
+        m.innerText = msg; m.style.color = isErr ? 'var(--danger)' : 'var(--success)';
+        t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000);
+    }
 
-        // --- AUTHENTICATION ENGINE ---
-        let currentEmail = localStorage.getItem('qb_email');
+    function urlBase64ToUint8Array(b64) {
+        const pad = '='.repeat((4 - b64.length % 4) % 4);
+        const base64 = (b64 + pad).replace(/-/g, '+').replace(/_/g, '/');
+        const raw = window.atob(base64);
+        const out = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; ++i) out[i] = raw.charCodeAt(i);
+        return out;
+    }
 
-        function checkAuth() {
-            if (currentEmail) {
-                document.getElementById('authScreen').style.display = 'none';
-                document.getElementById('mainApp').style.display = 'block';
-                // Set the display name (Capitalize the part before the @ symbol)
-                let name = currentEmail.split('@')[0];
-                document.getElementById('userNameDisplay').innerText = name.charAt(0).toUpperCase() + name.slice(1);
-                fetchApp();
-            } else {
-                document.getElementById('authScreen').style.display = 'flex';
-                document.getElementById('mainApp').style.display = 'none';
-            }
-        }
+    function drawAvatar(level) {
+        const canvas = document.getElementById('avatarCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0,0,80,80);
+        const k="#1e293b", s="#FFCC80", b="#3b82f6", c="#06b6d4";
+        ctx.fillStyle = k; ctx.fillRect(20,20,40,40); // Body
+        ctx.fillStyle = s; ctx.fillRect(25,15,30,30); // Face
+        ctx.fillStyle = b; ctx.fillRect(20,50,40,20); // Legs
+        if(level >= 2) { ctx.fillStyle = c; ctx.fillRect(20,40,40,10); } // Armor
+    }
 
-        // 1. Update handleAuth to store the token
-        async function handleAuth(endpoint) {
-            const email = document.getElementById('authEmail').value.trim();
-            const password = document.getElementById('authPassword').value.trim();
-            const errBox = document.getElementById('authError');
-            
-            const res = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            const data = await res.json();
-
-            if (res.ok) {
-                if (endpoint.includes('login')) {
-                    // Store BOTH email and the secret token
-                    localStorage.setItem('qb_email', email);
-                    localStorage.setItem('qb_token', data.token); 
-                    currentEmail = email;
-                    checkAuth();
-                } else {
-                    alert("Account created! You can now log in.");
-                }
-            } else {
-                errBox.innerText = data.message;
-                errBox.style.display = "block";
-            }
-        }
-
-        function logout() {
-            localStorage.removeItem('qb_email');
-            localStorage.removeItem('qb_token');
-            currentEmail = null;
-            checkAuth();
-        }
-
-        // --- GAME ENGINE ---
-        let appData = {};
-        let currentTab = 'daily';
-
-        // Helper to securely fetch data by passing the User-Email header
-        function getHeaders() {
-            const token = localStorage.getItem('qb_token');
-            return { 
-                'Content-Type': 'application/json', 
-                'Authorization': `Bearer ${token}` 
-            };
-        }
-
-        async function fetchApp() {
-            if (!currentEmail) return;
-            try {
-                const response = await fetch('/api/data', { headers: getHeaders() });
-                if (response.status === 401) return logout(); // Kick them out if unauthorized
-                appData = await response.json();
-                updateDashboard();
-                renderTasks();
-            } catch (err) { console.error("Server error", err); }
-        }
-
-        function updateDashboard() {
-            const p = appData.player;
-            const max_xp = Math.floor(100 * Math.pow(1.10, p.level - 1));
-            
-            // Format is now handled by our split spans in the HTML
-            document.getElementById('levelText').innerText = ` (lvl ${p.level})`;
-            document.getElementById('hpText').innerText = `${p.hp} / ${p.max_hp}`;
-            document.getElementById('xpText').innerText = `${p.current_xp} / ${max_xp}`;
-            document.getElementById('hpBar').style.width = `${(p.hp / p.max_hp) * 100}%`;
-            document.getElementById('xpBar').style.width = `${(p.current_xp / max_xp) * 100}%`;
-            
-            drawAvatar(p.level);
-        }
-
-        function drawAvatar(level) {
-            const canvas = document.getElementById('avatarCanvas');
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, 80, 80);
-            
-            const x = null, k = "#1e293b", h = "#3E2723", s = "#FFCC80", w = "#FFFFFF", p = "#0D47A1", c = "#06b6d4", b = "#3b82f6", d = "#475569"; 
-            let matrix = [
-                [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
-                [x,x,x,x,x,k,k,k,k,k,k,x,x,x,x,x],
-                [x,x,x,x,k,h,h,h,h,h,h,k,x,x,x,x],
-                [x,x,x,k,h,h,h,h,h,h,h,h,k,x,x,x],
-                [x,x,x,k,h,k,w,p,s,w,p,k,h,k,x,x],
-                [x,x,x,k,h,s,s,s,s,s,s,h,k,x,x,x],
-                [x,x,x,x,k,s,s,s,s,s,s,k,x,x,x,x],
-                [x,x,x,x,x,k,k,k,k,k,k,x,x,x,x,x],
-                [x,x,x,x,k,c,c,c,c,c,c,k,x,x,x,x],
-                [x,x,x,k,s,k,c,c,c,c,k,s,k,x,x,x],
-                [x,x,x,k,s,k,c,c,c,c,k,s,k,x,x,x],
-                [x,x,x,k,s,k,b,b,b,b,k,s,k,x,x,x],
-                [x,x,x,x,k,k,b,b,b,b,k,k,x,x,x,x],
-                [x,x,x,x,k,b,b,k,k,b,b,k,x,x,x,x],
-                [x,x,x,x,k,b,b,k,k,b,b,k,x,x,x,x],
-                [x,x,x,x,k,d,d,k,k,d,d,k,x,x,x,x] 
-            ];
-
-            if (level >= 2) { const a = "#94a3b8"; for(let r=8; r<=11; r++) for(let col=5; col<=10; col++) matrix[r][col] = a; }
-            if (level >= 3) {
-                const blade = "#e2e8f0", hilt = "#fbbf24", handle = "#78350f";
-                matrix[4][1]=k; matrix[4][2]=k; matrix[5][1]=k; matrix[5][2]=blade; matrix[5][3]=k;
-                matrix[6][1]=k; matrix[6][2]=blade; matrix[6][3]=k; matrix[7][1]=k; matrix[7][2]=blade; matrix[7][3]=k;
-                matrix[8][0]=k; matrix[8][1]=hilt; matrix[8][2]=hilt; matrix[8][3]=hilt; matrix[8][4]=k;
-                matrix[9][1]=k; matrix[9][2]=handle; matrix[9][3]=k; matrix[10][1]=k; matrix[10][2]=k; matrix[10][3]=k;
-            }
-            if (level >= 4) { const g = "#fbbf24"; for(let r=8; r<=11; r++) for(let col=5; col<=10; col++) matrix[r][col] = g; }
-            if (level >= 5) {
-                const g = "#fbbf24", r = "#e11d48";
-                matrix[0][5]=k; matrix[0][7]=k; matrix[0][9]=k; 
-                matrix[1][4]=k; matrix[1][5]=g; matrix[1][6]=k; matrix[1][7]=g; matrix[1][8]=k; matrix[1][9]=g; matrix[1][10]=k;
-                matrix[2][4]=k; matrix[2][5]=g; matrix[2][6]=g; matrix[2][7]=r; matrix[2][8]=g; matrix[2][9]=g; matrix[2][10]=k;
-            }
-
-            for(let row=0; row<16; row++) {
-                for(let col=0; col<16; col++) {
-                    if (matrix[row][col]) {
-                        ctx.fillStyle = matrix[row][col];
-                        ctx.fillRect((col * 3) + 16, (row * 3) + 16, 3, 3);
-                    }
-                }
-            }
-        }
-
-        function switchTab(tabName) {
-            currentTab = tabName;
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById('weeklyDaysContainer').style.display = (tabName === 'weekly') ? 'flex' : 'none';
-            document.getElementById('newDate').style.display = (tabName === 'todo') ? 'block' : 'none';
-            renderTasks();
-        }
-
-        function renderTasks() {
-            const container = document.getElementById('taskList');
-            container.innerHTML = '';
-            
-            let tasksData = appData[currentTab] || {};
-            const filterValue = document.getElementById('taskFilter').value;
-            const sortValue = document.getElementById('taskSort').value;
-
-            let tasksArray = Object.entries(tasksData).map(([name, details]) => ({ name, details }));
-            if (filterValue === 'pending') tasksArray = tasksArray.filter(t => t.details.state !== 1);
-            else if (filterValue === 'completed') tasksArray = tasksArray.filter(t => t.details.state === 1);
-
-            let pending = tasksArray.filter(t => t.details.state !== 1);
-            let completed = tasksArray.filter(t => t.details.state === 1);
-
-            const diffWeight = { "Trivial": 1, "Easy": 2, "Medium": 3, "Hard": 4, "Epic": 5 };
-            pending.sort((a, b) => sortValue === 'difficulty' ? 
-                diffWeight[b.details.difficulty || 'Medium'] - diffWeight[a.details.difficulty || 'Medium'] : 
-                (a.details.target_time || '23:59').localeCompare(b.details.target_time || '23:59')
-            );
-            completed.sort((a, b) => (a.details.target_time || '23:59').localeCompare(b.details.target_time || '23:59'));
-
-            const finalTasks = pending.concat(completed);
-
-            if (finalTasks.length === 0) {
-                container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 40px 20px; font-style: italic; background: var(--bg-color); border-radius: 10px; border: 2px dashed var(--border-color);">No quests currently active in this view. <br><span style="font-size: 13px; opacity: 0.8; margin-top: 5px; display: inline-block;">Use the Forge above to create a new adventure!</span></div>`;
-                return; 
-            }
-
-            let taskIndex = 0; 
-            finalTasks.forEach(task => {
-                taskIndex++;
-                const { name: taskName, details } = task;
-                const div = document.createElement('div');
-                div.className = 'task-item' + (details.state === -1 ? ' failed' : '');
-                
-                let tags = `[${details.difficulty || 'Medium'}]`;
-                if (currentTab === 'weekly' && details.days) tags += ` (${details.days.join(', ')})`;
-                if (details.target_time) tags += ` ⏳ ${details.target_time}`;
-                if (details.target_date) tags += ` 📅 ${details.target_date}`;
-                if (details.state === -1) tags += ` (FAILED)`;
-
-                const checked = details.state === 1 ? 'checked' : '';
-                const disabled = details.state === -1 ? 'disabled' : '';
-                const safeName = taskName.replace(/'/g, "\\'"); 
-                const completedStyle = details.state === 1 ? 'opacity: 0.5; text-decoration: line-through;' : '';
-
-                div.innerHTML = `
-                    <div style="display: flex; align-items: center; width: 100%; ${completedStyle}">
-                        <input type="checkbox" ${checked} ${disabled} onchange="toggleTask('${currentTab}', '${safeName}', this.checked)">
-                        <span style="font-weight: 600;">${taskName} <span class="tags">${tags}</span></span>
-                        <div class="task-actions">
-                            <button class="kebab-btn" onclick="toggleMenu(${taskIndex}, event)">⋮</button>
-                            <div id="menu-${taskIndex}" class="dropdown-menu">
-                                <div class="dropdown-item" onclick="triggerEdit('${currentTab}', '${safeName}')">Edit Task</div>
-                                <div class="dropdown-item danger" onclick="deleteTask('${currentTab}', '${safeName}')">Delete Task</div>
-                            </div>
-                        </div>
-                    </div>`;
-                container.appendChild(div);
-            });
-        }
-
-        async function toggleTask(category, taskName, isChecked) {
-            const res = await fetch('/api/task/toggle', {
-                method: 'POST', headers: getHeaders(),
-                body: JSON.stringify({ category, task_name: taskName, state: isChecked ? 1 : 0 })
-            });
-            if (res.ok) fetchApp(); 
-        }
-
-        let editingTaskName = null; 
-        async function addTask() {
-            const input = document.getElementById('newTaskName');
-            const difficulty = document.getElementById('newDifficulty').value;
-            const timeStr = document.getElementById('newTime').value;
-            const taskName = input.value.trim();
-            if (!taskName) return alert("Quest name cannot be empty!");
-
-            let daysArray = [];
-            if (currentTab === 'weekly') document.querySelectorAll('.day-cb:checked').forEach(cb => daysArray.push(cb.value));
-            const dateStr = (currentTab === 'todo') ? document.getElementById('newDate').value : null;
-
-            input.disabled = true;
-            const endpoint = editingTaskName ? '/api/task/edit' : '/api/task/add';
-            const payload = { category: currentTab, difficulty, target_time: timeStr || null, days: daysArray.length > 0 ? daysArray : null, target_date: dateStr || null };
-            
-            if (editingTaskName) { payload.old_name = editingTaskName; payload.new_name = taskName; } 
-            else { payload.task_name = taskName; }
-
-            const res = await fetch(endpoint, { method: 'POST', headers: getHeaders(), body: JSON.stringify(payload) });
-
-            if (res.ok) {
-                input.value = ''; document.getElementById('newTime').value = ''; document.getElementById('newDate').value = ''; 
-                document.querySelectorAll('.day-cb').forEach(cb => cb.checked = false);
-                editingTaskName = null;
-                const forgeBtn = document.getElementById('forgeBtn');
-                forgeBtn.innerText = "Forge"; forgeBtn.style.backgroundColor = "var(--success)";
-                fetchApp(); 
-            } else alert("Action failed. A quest with that name might already exist.");
-            input.disabled = false;
-        }
-
-        function toggleMenu(index, event) {
-            document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('show'));
-            document.getElementById(`menu-${index}`).classList.toggle('show');
-            event.stopPropagation();
-        }
-
-        document.addEventListener('click', () => document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('show')));
-
-        async function deleteTask(category, taskName) {
-            if (!confirm(`Are you sure you want to permanently delete "${taskName}"?`)) return;
-            const res = await fetch('/api/task/delete', { method: 'POST', headers: getHeaders(), body: JSON.stringify({ category, task_name: taskName }) });
-            if (res.ok) fetchApp();
-        }
-
-        function triggerEdit(category, taskName) {
-            editingTaskName = taskName;
-            const details = appData[category][taskName];
-            document.getElementById('newTaskName').value = taskName;
-            document.getElementById('newDifficulty').value = details.difficulty || 'Medium';
-            document.getElementById('newTime').value = details.target_time || '';
-            document.getElementById('newDate').value = details.target_date || '';
-            document.querySelectorAll('.day-cb').forEach(cb => cb.checked = (details.days && details.days.includes(cb.value)));
-            
-            const forgeBtn = document.getElementById('forgeBtn');
-            forgeBtn.innerText = "Save Edit"; forgeBtn.style.backgroundColor = "var(--warning)";
-            window.scrollTo(0, 0); 
-        }
-
-        // Boot Sequence
-        checkAuth();
-    </script>
+    window.onload = checkAuth;
+</script>
 </body>
 </html>

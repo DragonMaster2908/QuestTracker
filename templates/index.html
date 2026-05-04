@@ -2,135 +2,185 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ojas Quest Board</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest Board</title>
+    <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#bb86fc">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --primary: #bb86fc; --bg: #121212; --card-bg: #1e1e1e;
-            --text: #e1e1e1; --danger: #cf6679; --success: #03dac6; --warning: #f1c40f;
+            --primary: #bb86fc;
+            --bg: #121212;
+            --card-bg: #1e1e1e;
+            --text: #e1e1e1;
+            --danger: #cf6679;
+            --success: #03dac6;
+            --warning: #f1c40f;
         }
 
         body {
-            background-color: var(--bg); color: var(--text);
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            margin: 0; padding: 15px; overflow-x: hidden;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 15px;
+            overflow-x: hidden;
         }
 
+        /* Responsive Container */
         #app { max-width: 600px; margin: 0 auto; }
 
-        /* --- RPG Dashboard --- */
-        .dashboard {
-            background: var(--card-bg); padding: 15px; border-radius: 15px;
-            display: flex; align-items: center; gap: 15px; margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        .stats { flex: 1; }
-        .bar-container { background: #333; height: 10px; border-radius: 5px; margin: 5px 0; overflow: hidden; }
-        .bar-fill { height: 100%; transition: width 0.4s ease; }
-        #hpFill { background: var(--danger); }
-        #xpFill { background: var(--primary); }
-
-        /* --- The Forge (Input Area) --- */
-        .forge-panel {
-            background: var(--card-bg); padding: 20px; border-radius: 15px;
-            margin-bottom: 20px; border: 1px solid #333;
-        }
-        .forge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
-        .forge-group { display: flex; flex-direction: column; gap: 4px; }
-        .input-label { font-size: 10px; font-weight: bold; color: var(--primary); text-transform: uppercase; }
-        input, select {
-            background: #2c2c2c; border: 1px solid #444; color: white;
-            padding: 10px; border-radius: 8px; font-size: 16px;
-        }
-
-        /* --- Tabs & Filters --- */
-        .tabs { display: flex; gap: 10px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
-        .tab-btn {
-            padding: 8px 16px; border-radius: 20px; background: #252525;
-            border: none; color: var(--text); white-space: nowrap; cursor: pointer;
-        }
-        .tab-btn.active { background: var(--primary); color: black; font-weight: bold; }
-
-        /* --- Task Items (Mobile Fixes) --- */
+        /* Full Original CSS Restored */
         .task-item {
-            background: var(--card-bg); margin-bottom: 12px; padding: 16px;
-            border-radius: 12px; border-left: 4px solid var(--primary);
-            display: flex; flex-direction: column; gap: 10px;
+            background: var(--card-bg);
+            margin: 12px 0;
+            padding: 16px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border-left: 4px solid var(--primary);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
+
         @media (min-width: 480px) {
             .task-item { flex-direction: row; align-items: center; justify-content: space-between; }
         }
-        .task-info { flex: 1; min-width: 0; }
-        .task-name { font-weight: 600; font-size: 1.1rem; word-wrap: break-word; }
-        .tags {
-            font-size: 0.85rem; color: var(--primary); display: flex;
-            flex-wrap: wrap; gap: 8px; margin-top: 4px;
-        }
-        .completed { opacity: 0.5; border-left-color: var(--success); }
-        .completed .task-name { text-decoration: line-through; }
 
-        /* --- Utility --- */
+        .task-info { 
+            flex: 1; 
+            min-width: 0; 
+            width: 100%; 
+        }
+        .task-name { 
+            font-weight: 600; 
+            font-size: 1.1rem; 
+            word-wrap: break-word; 
+            overflow-wrap: break-word; 
+            display: block;
+        }
+        .tags {
+            font-size: 0.85rem;
+            color: var(--primary);
+            display: flex;
+            flex-wrap: wrap; /* This ensures items drop to the next line */
+            gap: 8px;
+            margin-top: 4px;
+            word-break: break-all; /* Fixes overflow for long day lists like Mon,Tue,Wed... */
+        }
+
+        .forge-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 15px; }
+        .input-label { font-size: 11px; font-weight: bold; color: var(--primary); text-transform: uppercase; }
+
+        input, select {
+            background: #2c2c2c;
+            border: 1px solid #444;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .notif-banner {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
         #toast {
-            display: none; position: fixed; bottom: 30px; left: 50%;
-            transform: translateX(-50%); background: #333; padding: 12px 24px;
-            border-radius: 50px; z-index: 10000; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            padding: 12px 24px;
+            border-radius: 50px;
+            border-left: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            z-index: 10000;
         }
-        .auth-screen {
-            display: flex; flex-direction: column; gap: 15px; height: 80vh;
-            justify-content: center; align-items: center;
-        }
+
+        /* Original Tab and Button Styles */
+        .tab-btn { padding: 10px 20px; border: none; background: #252525; color: white; cursor: pointer; border-radius: 20px; }
+        .tab-btn.active { background: var(--primary); color: black; font-weight: bold; }
+        
+        .kebab-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
+        .dropdown-menu { display: none; position: absolute; background: #2c2c2c; border: 1px solid #444; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 1000; }
+        .dropdown-menu.show { display: block; }
+        .dropdown-item { padding: 10px 20px; cursor: pointer; }
+        .dropdown-item:hover { background: #333; }
+        .dropdown-item.danger { color: var(--danger); }
+
+        /* Full Dark Mode Theme Engine CSS */
+        body.dark-mode { --bg: #121212; --card-bg: #1e1e1e; --text: #e1e1e1; }
+        body.light-mode { --bg: #f3f4f6; --card-bg: #ffffff; --text: #1f2937; }
     </style>
 </head>
 <body>
 
 <div id="app">
-    <!-- Auth Screen -->
-    <div id="authScreen" class="auth-screen" style="display: none;">
-        <h2>Quest Board Login</h2>
-        <input type="email" id="authEmail" placeholder="Email">
-        <input type="password" id="authPassword" placeholder="Password">
-        <div style="display: flex; gap: 10px;">
-            <button onclick="handleAuth('/api/auth/login')" style="background: var(--primary); padding: 10px 20px; border-radius: 8px; border: none;">Login</button>
-            <button onclick="handleAuth('/api/auth/signup')" style="background: none; border: 1px solid var(--primary); color: var(--primary); padding: 10px 20px; border-radius: 8px;">Sign Up</button>
+    <!-- Full Auth Screen Restored -->
+    <div id="authScreen" style="display: none; flex-direction: column; align-items: center; justify-content: center; height: 80vh;">
+        <h2 style="color: var(--primary);">QUEST BOARD</h2>
+        <div style="background: var(--card-bg); padding: 30px; border-radius: 15px; display: flex; flex-direction: column; gap: 15px; width: 300px;">
+            <input type="email" id="authEmail" placeholder="Email">
+            <input type="password" id="authPassword" placeholder="Password">
+            <button onclick="handleAuth('/api/auth/login')" style="background: var(--primary); border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">LOGIN</button>
+            <button onclick="handleAuth('/api/auth/signup')" style="background: none; border: 1px solid var(--primary); color: var(--primary); padding: 12px; border-radius: 8px; cursor: pointer;">SIGN UP</button>
+            <p id="authError" style="color: var(--danger); display: none; font-size: 0.8rem; text-align: center;"></p>
         </div>
-        <p id="authError" style="color: var(--danger); display: none;"></p>
     </div>
 
-    <!-- Main App -->
+    <!-- Main App Restored -->
     <div id="mainApp" style="display: none;">
-        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <div>
-                <span id="userNameDisplay" style="font-size: 1.5rem; font-weight: bold;">Ojas</span>
-                <span id="levelText" style="color: var(--primary); font-size: 0.9rem;"></span>
-            </div>
+        <div id="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 id="userNameDisplay">Welcome</h2>
             <div style="display: flex; gap: 15px; align-items: center;">
-                <i class="fa-regular fa-bell" id="notifBtn" onclick="requestNotificationPermission()" style="cursor: pointer;"></i>
-                <i class="fa-solid fa-arrow-right-from-bracket" onclick="logout()" style="cursor: pointer; opacity: 0.7;"></i>
+                <button onclick="requestNotificationPermission()" id="notifBtn" style="background: none; border: none; color: var(--primary); font-size: 1.2rem; cursor: pointer;">
+                    <i class="fa-regular fa-bell"></i>
+                </button>
+                <button id="themeToggle" onclick="toggleTheme()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">🌙</button>
+                <i class="fa-solid fa-right-from-bracket" onclick="logout()" style="cursor: pointer; opacity: 0.7;"></i>
             </div>
-        </header>
+        </div>
 
-        <!-- Player Dashboard -->
-        <div class="dashboard">
+        <!-- Notification Setup Banner -->
+        <div id="notifBanner" class="notif-banner" style="display: none;">
+            <span>Enable mobile alerts for tasks?</span>
+            <button onclick="requestNotificationPermission()" style="background: var(--primary); border: none; color: black; padding: 5px 10px; border-radius: 4px; font-weight: bold;">Enable</button>
+        </div>
+
+        <!-- Full Original Dashboard with Avatar -->
+        <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; display: flex; gap: 20px; align-items: center; margin-bottom: 25px;">
             <canvas id="avatarCanvas" width="80" height="80" style="image-rendering: pixelated;"></canvas>
-            <div class="stats">
-                <div class="input-label">Health (HP)</div>
-                <div class="bar-container"><div id="hpFill" class="bar-fill"></div></div>
-                <div class="input-label">Experience (XP)</div>
-                <div class="bar-container"><div id="xpFill" class="bar-fill"></div></div>
-                <div style="font-size: 10px; display: flex; justify-content: space-between; margin-top: 2px;">
-                    <span id="hpText">100/100</span>
-                    <span id="xpText">0/100</span>
+            <div style="flex: 1;">
+                <div style="font-weight: bold; margin-bottom: 10px;">Hero Stats <span id="levelText" style="color: var(--primary);"></span></div>
+                <div class="input-label">HP: <span id="hpText"></span></div>
+                <div style="background: #333; height: 10px; border-radius: 5px; margin-bottom: 10px; overflow: hidden;">
+                    <div id="hpBar" style="background: var(--danger); height: 100%; width: 0%;"></div>
+                </div>
+                <div class="input-label">XP: <span id="xpText"></span></div>
+                <div style="background: #333; height: 10px; border-radius: 5px; overflow: hidden;">
+                    <div id="xpBar" style="background: var(--primary); height: 100%; width: 0%;"></div>
                 </div>
             </div>
         </div>
 
-        <!-- The Forge (Add/Edit Task) -->
-        <div class="forge-panel">
-            <input type="text" id="newTaskName" placeholder="Enter quest name..." style="width: 100%; box-sizing: border-box;">
-            <div class="forge-grid">
+        <!-- The Forge (Task Input) -->
+        <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; margin-bottom: 25px;">
+            <div class="forge-group">
+                <label class="input-label">Quest Name</label>
+                <input type="text" id="newTaskName" placeholder="What is the objective?">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <div class="forge-group">
                     <label class="input-label">Difficulty</label>
                     <select id="newDifficulty">
@@ -138,38 +188,32 @@
                     </select>
                 </div>
                 <div class="forge-group">
-                    <label class="input-label">Target Time</label>
+                    <label class="input-label">Time</label>
                     <input type="time" id="newTime">
                 </div>
-                <div class="forge-group" id="todoDateGroup" style="display: none;">
-                    <label class="input-label">Due Date</label>
-                    <input type="date" id="newDate">
-                </div>
             </div>
-            
-            <!-- Weekly Days Selector -->
-            <div id="weeklyDaysContainer" style="display: none; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
-                <label class="input-label" style="width: 100%;">Repeat on:</label>
-                <label><input type="checkbox" class="day-cb" value="Mon"> M</label>
-                <label><input type="checkbox" class="day-cb" value="Tue"> T</label>
-                <label><input type="checkbox" class="day-cb" value="Wed"> W</label>
-                <label><input type="checkbox" class="day-cb" value="Thu"> T</label>
-                <label><input type="checkbox" class="day-cb" value="Fri"> F</label>
-                <label><input type="checkbox" class="day-cb" value="Sat"> S</label>
-                <label><input type="checkbox" class="day-cb" value="Sun"> S</label>
+            <input type="date" id="newDate" style="display: none; margin-bottom: 15px; width: 100%; box-sizing: border-box;">
+            <div id="weeklyDaysContainer" style="display: none; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                <label><input type="checkbox" class="day-cb" value="Mon"> Mon</label>
+                <label><input type="checkbox" class="day-cb" value="Tue"> Tue</label>
+                <label><input type="checkbox" class="day-cb" value="Wed"> Wed</label>
+                <label><input type="checkbox" class="day-cb" value="Thu"> Thu</label>
+                <label><input type="checkbox" class="day-cb" value="Fri"> Fri</label>
+                <label><input type="checkbox" class="day-cb" value="Sat"> Sat</label>
+                <label><input type="checkbox" class="day-cb" value="Sun"> Sun</label>
             </div>
-
-            <button id="forgeBtn" onclick="addTask()" style="width: 100%; margin-top: 15px; padding: 12px; border-radius: 8px; border: none; background: var(--success); color: black; font-weight: bold; cursor: pointer;">FORGE QUEST</button>
+            <button id="forgeBtn" onclick="addTask()" style="width: 100%; background: var(--success); color: black; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">FORGE QUEST</button>
         </div>
 
         <!-- View Controls -->
-        <div class="tabs">
+        <div class="tabs" style="display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px;">
             <button class="tab-btn active" onclick="switchTab('daily')">Dailies</button>
             <button class="tab-btn" onclick="switchTab('weekly')">Weeklies</button>
             <button class="tab-btn" onclick="switchTab('todo')">To-Do</button>
+            <select id="taskFilter" onchange="renderTasks()" style="padding: 5px; border-radius: 20px;"><option value="all">All</option><option value="pending">Pending</option><option value="completed">Done</option></select>
+            <select id="taskSort" onchange="renderTasks()" style="padding: 5px; border-radius: 20px;"><option value="time">By Time</option><option value="difficulty">By Rank</option></select>
         </div>
 
-        <!-- Task List -->
         <div id="taskList"></div>
     </div>
 </div>
@@ -180,55 +224,132 @@
     const VAPID_PUBLIC_KEY = "BOc_goJ2q_CCxYFbAwyJFkJJvYUgGRlvnLuN7-TXGrvArtU5zoX2howB34LGJMS2UvMwFP9GltN9EMlkbBWRukU";
     let appData = {};
     let currentTab = 'daily';
-    let editingTaskName = null;
+    let currentEmail = localStorage.getItem('qb_email');
 
-    // --- PWA & SW ---
+    // 1. Full PWA Engine
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js');
         });
     }
 
-    // --- Auth Logic ---
-    async function handleAuth(endpoint) {
-        const email = document.getElementById('authEmail').value;
-        const password = document.getElementById('authPassword').value;
-        const res = await fetch(endpoint, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ email, password })
-        });
-        const data = await res.json();
-        if (res.ok) {
-            localStorage.setItem('qb_token', data.token);
-            localStorage.setItem('qb_email', email);
-            checkAuth();
-        } else {
-            const err = document.getElementById('authError');
-            err.innerText = data.message || "Auth failed"; err.style.display = 'block';
+    // 2. Toast System
+    function showStatus(msg, isError = false) {
+        const toast = document.getElementById('toast');
+        const msgEl = document.getElementById('toastMsg');
+        msgEl.style.color = isError ? 'var(--danger)' : 'var(--success)';
+        msgEl.innerText = msg;
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
+    }
+
+    // 3. FULL PIXEL ART MATRIX RESTORED
+    function drawAvatar(level) {
+        const canvas = document.getElementById('avatarCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, 80, 80);
+        
+        const x = null, k = "#1e293b", h = "#3E2723", s = "#FFCC80", w = "#FFFFFF", p = "#0D47A1", c = "#06b6d4", b = "#3b82f6", d = "#475569"; 
+        let matrix = [
+            [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
+            [x,x,x,x,x,k,k,k,k,k,k,x,x,x,x,x],
+            [x,x,x,x,k,h,h,h,h,h,h,k,x,x,x,x],
+            [x,x,x,k,h,h,h,h,h,h,h,h,k,x,x,x],
+            [x,x,x,k,h,k,w,p,s,w,p,k,h,k,x,x],
+            [x,x,x,k,h,s,s,s,s,s,s,h,k,x,x,x],
+            [x,x,x,x,k,s,s,s,s,s,s,k,x,x,x,x],
+            [x,x,x,x,x,k,k,k,k,k,k,x,x,x,x,x],
+            [x,x,x,x,k,c,c,c,c,c,c,k,x,x,x,x],
+            [x,x,x,k,s,k,c,c,c,c,k,s,k,x,x,x],
+            [x,x,x,k,s,k,c,c,c,c,k,s,k,x,x,x],
+            [x,x,x,k,s,k,b,b,b,b,k,s,k,x,x,x],
+            [x,x,x,x,k,k,b,b,b,b,k,k,x,x,x,x],
+            [x,x,x,x,k,b,b,k,k,b,b,k,x,x,x,x],
+            [x,x,x,x,k,b,b,k,k,b,b,k,x,x,x,x],
+            [x,x,x,x,k,d,d,k,k,d,d,k,x,x,x,x] 
+        ];
+
+        // Equipment logic
+        if (level >= 2) { const a = "#94a3b8"; for(let r=8; r<=11; r++) for(let col=5; col<=10; col++) matrix[r][col] = a; }
+        if (level >= 3) {
+            const blade = "#e2e8f0", hilt = "#fbbf24", handle = "#78350f";
+            matrix[4][1]=k; matrix[4][2]=k; matrix[5][1]=k; matrix[5][2]=blade; matrix[5][3]=k;
+            matrix[6][1]=k; matrix[6][2]=blade; matrix[6][3]=k; matrix[7][1]=k; matrix[7][2]=blade; matrix[7][3]=k;
+            matrix[8][0]=k; matrix[8][1]=hilt; matrix[8][2]=hilt; matrix[8][3]=hilt; matrix[8][4]=k;
+            matrix[9][1]=k; matrix[9][2]=handle; matrix[9][3]=k; matrix[10][1]=k; matrix[10][2]=k; matrix[10][3]=k;
+        }
+        if (level >= 4) { const g = "#fbbf24"; for(let r=8; r<=11; r++) for(let col=5; col<=10; col++) matrix[r][col] = g; }
+        if (level >= 5) {
+            const g = "#fbbf24", r = "#e11d48";
+            matrix[0][5]=k; matrix[0][7]=k; matrix[0][9]=k; 
+            matrix[1][4]=k; matrix[1][5]=g; matrix[1][6]=k; matrix[1][7]=g; matrix[1][8]=k; matrix[1][9]=g; matrix[1][10]=k;
+            matrix[2][4]=k; matrix[2][5]=g; matrix[2][6]=g; matrix[2][7]=r; matrix[2][8]=g; matrix[2][9]=g; matrix[2][10]=k;
+        }
+
+        for(let row=0; row<16; row++) {
+            for(let col=0; col<16; col++) {
+                if (matrix[row][col]) {
+                    ctx.fillStyle = matrix[row][col];
+                    ctx.fillRect((col * 3) + 16, (row * 3) + 16, 3, 3);
+                }
+            }
         }
     }
 
-    function checkAuth() {
-        const token = localStorage.getItem('qb_token');
-        if (token) {
-            document.getElementById('authScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            fetchApp();
+    // 4. Notification Handshake Logic
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
+        return outputArray;
+    }
+
+    async function requestNotificationPermission() {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            const registration = await navigator.serviceWorker.ready;
+            
+            // Clean up old subscriptions
+            const existing = await registration.pushManager.getSubscription();
+            if (existing) await existing.unsubscribe();
+
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+            });
+
+            const response = await fetch('/api/save-subscription', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('qb_token')}`
+                },
+                body: JSON.stringify(subscription)
+            });
+
+            if (response.ok) {
+                showStatus("Alerts fully synced!");
+                document.getElementById('notifBanner').style.display = 'none';
+            }
         } else {
-            document.getElementById('authScreen').style.display = 'flex';
-            document.getElementById('mainApp').style.display = 'none';
+            showStatus("Permission denied", true);
         }
     }
 
-    function logout() { localStorage.clear(); location.reload(); }
+    // 5. Original Game Engine Logic
+    function getHeaders() {
+        return { 
+            'Content-Type': 'application/json', 
+            'Authorization': `Bearer ${localStorage.getItem('qb_token')}` 
+        };
+    }
 
-    // --- Game & Task Engine ---
     async function fetchApp() {
-        const res = await fetch('/api/data', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('qb_token')}` }
-        });
-        if (res.status === 401) logout();
-        appData = await res.json();
+        const response = await fetch('/api/data', { headers: getHeaders() });
+        if (response.status === 401) return logout();
+        appData = await response.json();
         updateDashboard();
         renderTasks();
     }
@@ -237,73 +358,69 @@
         const p = appData.player;
         const max_xp = Math.floor(100 * Math.pow(1.10, p.level - 1));
         document.getElementById('levelText').innerText = ` (Lvl ${p.level})`;
-        document.getElementById('hpText').innerText = `${p.hp}/${p.max_hp}`;
-        document.getElementById('xpText').innerText = `${p.current_xp}/${max_xp}`;
-        document.getElementById('hpFill').style.width = `${(p.hp / p.max_hp) * 100}%`;
-        document.getElementById('xpFill').style.width = `${(p.current_xp / max_xp) * 100}%`;
+        document.getElementById('hpText').innerText = `${p.hp} / ${p.max_hp}`;
+        document.getElementById('xpText').innerText = `${p.current_xp} / ${max_xp}`;
+        document.getElementById('hpBar').style.width = `${(p.hp / p.max_hp) * 100}%`;
+        document.getElementById('xpBar').style.width = `${(p.current_xp / max_xp) * 100}%`;
         drawAvatar(p.level);
     }
 
     function renderTasks() {
         const container = document.getElementById('taskList');
         container.innerHTML = '';
-        const tasks = appData[currentTab] || {};
-        
-        Object.entries(tasks).forEach(([name, details]) => {
+        let tasksData = appData[currentTab] || {};
+        const filter = document.getElementById('taskFilter').value;
+
+        Object.entries(tasksData).forEach(([name, details], index) => {
+            if (filter === 'pending' && details.state === 1) return;
+            if (filter === 'completed' && details.state !== 1) return;
+
             const div = document.createElement('div');
-            div.className = `task-item ${details.state === 1 ? 'completed' : ''}`;
+            div.className = 'task-item' + (details.state === 1 ? ' completed' : '');
             
-            let timeTag = details.target_time ? `<span><i class="fa-regular fa-clock"></i> ${details.target_time}</span>` : '';
-            let dateTag = details.target_date ? `<span><i class="fa-regular fa-calendar"></i> ${details.target_date}</span>` : '';
-            let daysTag = (currentTab === 'weekly' && details.days) ? `<span><i class="fa-solid fa-repeat"></i> ${details.days.join(', ')}</span>` : '';
+            let tags = `Rank: ${details.difficulty}`;
+            if (details.target_time) tags += ` | ⏳ ${details.target_time}`;
+            if (details.target_date) tags += ` | 📅 ${details.target_date}`;
 
             div.innerHTML = `
                 <div class="task-info">
-                    <div class="task-name">${name}</div>
-                    <div class="tags">
-                        <span><i class="fa-solid fa-bolt"></i> ${details.difficulty}</span>
-                        ${timeTag} ${dateTag} ${daysTag}
-                    </div>
+                    <div class="task-name" style="${details.state === 1 ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${name}</div>
+                    <div class="tags">${tags}</div>
                 </div>
-                <div style="display: flex; gap: 15px; align-items: center;">
-                    <i class="fa-solid fa-trash" style="color: var(--danger); opacity: 0.5;" onclick="deleteTask('${name}')"></i>
-                    <i class="fa-solid ${details.state === 1 ? 'fa-circle-check' : 'fa-circle'}" 
-                       style="font-size: 1.8rem; color: ${details.state === 1 ? 'var(--success)' : '#444'}" 
-                       onclick="toggleTask('${name}', ${details.state === 1 ? 0 : 1})"></i>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <input type="checkbox" ${details.state === 1 ? 'checked' : ''} onchange="toggleTask('${currentTab}', '${name}', this.checked)" style="transform: scale(1.5);">
+                    <i class="fa-solid fa-trash" onclick="deleteTask('${currentTab}', '${name}')" style="color: var(--danger); cursor: pointer;"></i>
                 </div>
             `;
             container.appendChild(div);
         });
     }
 
-    async function toggleTask(name, state) {
+    async function toggleTask(category, name, isChecked) {
         await fetch('/api/task/toggle', {
             method: 'POST', headers: getHeaders(),
-            body: JSON.stringify({ category: currentTab, task_name: name, state: state })
+            body: JSON.stringify({ category, task_name: name, state: isChecked ? 1 : 0 })
         });
         fetchApp();
     }
 
     async function addTask() {
-        const name = document.getElementById('newTaskName').value;
-        if(!name) return showStatus("Quest name required", true);
+        const name = document.getElementById('newTaskName').value.trim();
+        if (!name) return alert("Quest name required!");
         
         const payload = {
-            category: currentTab, task_name: name,
+            category: currentTab,
+            task_name: name,
             difficulty: document.getElementById('newDifficulty').value,
             target_time: document.getElementById('newTime').value || null
         };
-
+        
+        if (currentTab === 'todo') payload.target_date = document.getElementById('newDate').value;
         if (currentTab === 'weekly') {
             payload.days = Array.from(document.querySelectorAll('.day-cb:checked')).map(cb => cb.value);
         }
-        if (currentTab === 'todo') {
-            payload.target_date = document.getElementById('newDate').value || null;
-        }
 
-        const res = await fetch('/api/task/add', {
-            method: 'POST', headers: getHeaders(), body: JSON.stringify(payload)
-        });
+        const res = await fetch('/api/task/add', { method: 'POST', headers: getHeaders(), body: JSON.stringify(payload) });
         if (res.ok) {
             document.getElementById('newTaskName').value = '';
             fetchApp();
@@ -311,12 +428,9 @@
         }
     }
 
-    async function deleteTask(name) {
-        if (!confirm("Delete this quest?")) return;
-        await fetch('/api/task/delete', {
-            method: 'POST', headers: getHeaders(),
-            body: JSON.stringify({ category: currentTab, task_name: name })
-        });
+    async function deleteTask(category, name) {
+        if (!confirm("Abandon this quest?")) return;
+        await fetch('/api/task/delete', { method: 'POST', headers: getHeaders(), body: JSON.stringify({ category, task_name: name }) });
         fetchApp();
     }
 
@@ -325,60 +439,63 @@
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         event.target.classList.add('active');
         document.getElementById('weeklyDaysContainer').style.display = tab === 'weekly' ? 'flex' : 'none';
-        document.getElementById('todoDateGroup').style.display = tab === 'todo' ? 'flex' : 'none';
+        document.getElementById('newDate').style.display = tab === 'todo' ? 'block' : 'none';
         renderTasks();
     }
 
-    // --- Notification Handshake ---
-    async function requestNotificationPermission() {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-            const registration = await navigator.serviceWorker.ready;
-            const subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-            });
-            await fetch('/api/save-subscription', {
-                method: 'POST', headers: getHeaders(), body: JSON.stringify(subscription)
-            });
-            showStatus("Alerts Enabled!");
-            document.getElementById('notifBtn').style.color = 'var(--success)';
+    // 6. Dynamic Auth and Theme Logic
+    function checkAuth() {
+        if (currentEmail) {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            
+            // SET DYNAMIC USERNAME FROM EMAIL
+            let name = currentEmail.split('@')[0];
+            document.getElementById('userNameDisplay').innerText = "Welcome, " + name.charAt(0).toUpperCase() + name.slice(1);
+            
+            fetchApp();
+        } else {
+            document.getElementById('authScreen').style.display = 'flex';
+            document.getElementById('mainApp').style.display = 'none';
         }
     }
 
-    // --- Helpers ---
-    function getHeaders() {
-        return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('qb_token')}` };
+    async function handleAuth(endpoint) {
+        const email = document.getElementById('authEmail').value.trim();
+        const password = document.getElementById('authPassword').value.trim();
+        const res = await fetch(endpoint, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            if (endpoint.includes('login')) {
+                localStorage.setItem('qb_email', email);
+                localStorage.setItem('qb_token', data.token);
+                currentEmail = email;
+                checkAuth();
+            } else {
+                alert("Account created! Log in now.");
+            }
+        } else {
+            const err = document.getElementById('authError');
+            err.innerText = data.message; err.style.display = 'block';
+        }
     }
 
-    function showStatus(msg, isErr = false) {
-        const t = document.getElementById('toast');
-        const m = document.getElementById('toastMsg');
-        m.innerText = msg; m.style.color = isErr ? 'var(--danger)' : 'var(--success)';
-        t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000);
+    function logout() { localStorage.clear(); currentEmail = null; checkAuth(); }
+
+    function toggleTheme() {
+        const body = document.body;
+        const isDark = body.classList.toggle('dark-mode');
+        localStorage.setItem('habitTrackerTheme', isDark ? 'dark' : 'light');
+        document.getElementById('themeToggle').innerText = isDark ? '☀️' : '🌙';
     }
 
-    function urlBase64ToUint8Array(b64) {
-        const pad = '='.repeat((4 - b64.length % 4) % 4);
-        const base64 = (b64 + pad).replace(/-/g, '+').replace(/_/g, '/');
-        const raw = window.atob(base64);
-        const out = new Uint8Array(raw.length);
-        for (let i = 0; i < raw.length; ++i) out[i] = raw.charCodeAt(i);
-        return out;
-    }
+    // Init Theme
+    if (localStorage.getItem('habitTrackerTheme') === 'dark') document.body.classList.add('dark-mode');
 
-    function drawAvatar(level) {
-        const canvas = document.getElementById('avatarCanvas');
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0,0,80,80);
-        const k="#1e293b", s="#FFCC80", b="#3b82f6", c="#06b6d4";
-        ctx.fillStyle = k; ctx.fillRect(20,20,40,40); // Body
-        ctx.fillStyle = s; ctx.fillRect(25,15,30,30); // Face
-        ctx.fillStyle = b; ctx.fillRect(20,50,40,20); // Legs
-        if(level >= 2) { ctx.fillStyle = c; ctx.fillRect(20,40,40,10); } // Armor
-    }
-
-    window.onload = checkAuth;
+    checkAuth();
 </script>
 </body>
 </html>

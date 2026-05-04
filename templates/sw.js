@@ -1,9 +1,20 @@
-// A simple service worker to enable PWA installation
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
+self.addEventListener('push', function(event) {
+    const data = event.data ? event.data.json() : { title: 'Quest Alert', body: 'Time to check your tasks!' };
+    
+    const options = {
+        body: data.body,
+        icon: 'https://cdn-icons-png.flaticon.com/512/536/536034.png',
+        badge: 'https://cdn-icons-png.flaticon.com/512/536/536034.png',
+        vibrate: [100, 50, 100],
+        data: { url: '/' }
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(data.title, options)
+    );
 });
 
-self.addEventListener('fetch', (event) => {
-  // Currently just acts as a pass-through
-  event.respondWith(fetch(event.request));
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close();
+    event.waitUntil(clients.openWindow('/'));
 });

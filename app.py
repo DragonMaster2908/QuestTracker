@@ -1,9 +1,11 @@
 import os
+import json
+from datetime import datetime
+import pytz
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from supabase import create_client
 from dotenv import load_dotenv
-from datetime import datetime
-import pytz
+from pywebpush import webpush, WebPushException
 
 # Initialize Flask
 app = Flask(__name__)
@@ -13,6 +15,10 @@ load_dotenv()
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
+
+# Notification Keys
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY")
+VAPID_EMAIL = os.environ.get("VAPID_EMAIL")
 
 # --- DATABASE HELPERS ---
 
@@ -214,6 +220,68 @@ def save_subscription():
     data['subscription'] = request.json
     save_data(data, email)
     return jsonify({"status": "success", "message": "Subscription saved!"})
+
+# --- PUSH NOTIFICATION ENGINE ---
+
+def send_push(subscription, title, body):
+    """Sends the actual alert to the phone."""
+    try:
+        webpush(
+            subscription_info=subscription,
+            data=json.dumps({"title": title, "body": body}),
+            vapid_private_key=VAPID_PRIVATE_KEY,
+            vapid_claims={"sub": f"mailto:{VAPID_EMAIL}"}
+        )
+    except WebPushException as ex:
+        print("Push failed:", ex)
+
+@app.route('/api/cron/trigger-alerts', methods=['GET'])
+def trigger_alerts():
+    """This route is pinged every minute by cron-job.org"""
+    
+    # Optional Security: Only run if the correct secret password is provided in the URL
+    secret = request.args.get("key")
+    if secret != "ojas_forge_123":
+        return jsonify({"status": "unauthorized"}), 401
+
+    # Force the server to use Indian Standard Time (IST)
+    ist = pytz.timezone('Asia/Kolkata')
+    now = datetime.now(ist)
+    current_time = now.strftime("%H:%M")
+    current_date = now.strftime("%Y-%m-%d")
+    current_day = now.strftime("%a") # Returns 'Mon', 'Tue', etc.
+
+    # Fetch all users
+    response = supabase.table('player_save').select('save_data').execute()
+    
+    alerts_sent = 0
+    for row in response.data:
+        data = row['save_data']
+        sub = data.get('subscription')
+        if not sub: continue # Skip if user hasn't enabled alerts
+        
+        # 1. Check Daily Tasks
+        for t_name, details in data.get("daily", {}).items():
+            if details.get("state") != 1 and details.get("target_time") == current_time:
+                send_push(sub, "Daily Quest Due!", f"Time to tackle: {t_name}")
+                alerts_sent += 1
+        
+        # 2. Check Weekly Tasks
+        for t_name, details in data.get("weekly", {}).items():
+            days = details.get("days", [])
+            # Only alert if it's not done, it's scheduled for today, AND the time matches
+            if details.get("state") != 1 and current_day in days and details.get("target_time") == current_time:
+                send_push(sub, "Weekly Quest Due!", f"Scheduled for today: {t_name}")
+                alerts_sent += 1
+                
+        # 3. Check To-Do Tasks
+        for t_name, details in data.get("todo", {}).items():
+            # Only alert if it's not done, the date matches today, AND the time matches
+            if details.get("state") != 1 and details.get("target_date") == current_date and details.get("target_time") == current_time:
+                send_push(sub, "Deadline Reached!", f"To-Do due now: {t_name}")
+                alerts_sent += 1
+
+    return jsonify({"status": "success", "time_checked": current_time, "alerts_fired": alerts_sent})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

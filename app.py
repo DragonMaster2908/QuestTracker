@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, request, jsonify
 from supabase import create_client
 from dotenv import load_dotenv
+from flask import send_from_directory
 
 # Initialize Flask
 app = Flask(__name__)
@@ -169,6 +170,14 @@ def edit_task():
     data[cat][new] = task_data
     save_data(data, email)
     return jsonify({"status": "success"})
+
+@app.route('/manifest.json')
+def serve_manifest():
+    return send_from_directory('templates', 'manifest.json')
+
+@app.route('/sw.js')
+def serve_sw():
+    return send_from_directory('templates', 'sw.js')
 
 if __name__ == '__main__':
     # Use the port assigned by the cloud host, or default to 5000

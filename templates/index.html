@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest Board</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #f1f5f9; --card-bg: #ffffff; --text-main: #334155; --text-muted: #64748b; --border-color: #e2e8f0; 
+            --primary: #6366f1; --primary-hover: #e0e7ff; --success: #10b981; --danger: #f43f5e; --warning: #f59e0b; --bar-bg: #e2e8f0; 
+        }
+        body.dark-mode {
+            --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; --border-color: #334155; 
+            --primary-hover: #312e81; --bar-bg: #334155; 
+        }
+
+        body { font-family: 'Inter', system-ui, sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; color: var(--text-main); }
+        body, .dashboard, .tab-btn, .task-list, .forge-panel, .forge-input, .dropdown-menu { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
+        .app-container { width: 95%; max-width: 1400px; margin: 20px auto; }
+
+        /* AUTH SCREEN STYLES */
+        .auth-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; }
+        .auth-card { background: var(--card-bg); padding: 40px; border-radius: 15px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid var(--border-color); width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
+        .auth-card h1 { margin: 0 0 10px 0; color: var(--primary); font-weight: 800; text-align: center; }
+        .auth-card input { padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; background: var(--bg-color); color: var(--text-main); }
+        .auth-card button { padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; color: white; }
+        .btn-login { background: var(--primary); }
+        .btn-signup { background: var(--success); }
+        .auth-card button:hover { filter: brightness(1.1); }
+        .auth-error { color: var(--danger); font-size: 14px; text-align: center; display: none; margin-top: -5px; }
+
+        /* MAIN UI STYLES */
+        .dashboard { background: var(--card-bg); border-radius: 15px; padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid var(--border-color); }
+        .stats { flex-grow: 1; }
+        .bar-container { background: var(--bar-bg); border-radius: 10px; height: 16px; margin: 5px 0 15px 0; overflow: hidden; }
+        .hp-bar { background: var(--danger); height: 100%; transition: width 0.4s ease-in-out; border-radius: 10px; }
+        .xp-bar { background: var(--success); height: 100%; transition: width 0.4s ease-in-out; border-radius: 10px; }
+        
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: var(--card-bg); color: var(--text-muted); border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; border: 1px solid var(--border-color); }
+        .tab-btn:hover { background: var(--primary-hover); color: var(--primary); }
+        .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 6px rgba(99, 102, 241, 0.25); }
+        
+        .task-list { background: var(--card-bg); border-radius: 15px; padding: 20px; min-height: 300px; border: 1px solid var(--border-color); }
+        .task-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); font-size: 16px; }
+        .task-item:last-child { border-bottom: none; }
+        .task-item input[type="checkbox"] { margin-right: 15px; width: 20px; height: 20px; cursor: pointer; accent-color: var(--success); }
+        .task-item.failed { color: var(--danger); text-decoration: line-through; opacity: 0.7; }
+        .tags { font-size: 13px; color: var(--text-muted); font-weight: 400; margin-left: 10px; background: var(--bg-color); padding: 2px 8px; border-radius: 12px; }
+
+        .forge-panel { background: var(--card-bg); border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--border-color); }
+        .forge-input { padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 15px; background: var(--card-bg); color: var(--text-main); outline: none; }
+        .forge-input:focus { border-color: var(--primary); }
+        .forge-btn { padding: 10px 20px; background-color: var(--success); color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; }
+        
+        .task-actions { margin-left: auto; position: relative; }
+        .kebab-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); padding: 0 10px; border-radius: 4px; }
+        .kebab-btn:hover { color: var(--text-main); background: var(--bg-color); }
+        .dropdown-menu { display: none; position: absolute; right: 0; top: 100%; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); z-index: 10; min-width: 140px; padding: 4px 0; }
+        .dropdown-menu.show { display: block; }
+        .dropdown-item { padding: 8px 16px; font-size: 14px; cursor: pointer; color: var(--text-main); }
+        .dropdown-item:hover { background: var(--bg-color); }
+        .dropdown-item.danger { color: var(--danger); }
+    </style>
+</head>
+<body>
+
+    <!-- AUTHENTICATION SCREEN -->
+    <div id="authScreen" class="auth-container">
+        <div class="auth-card">
+            <h1>Quest Board</h1>
+            <p style="text-align: center; color: var(--text-muted); margin-top: -10px;">Login or create an account</p>
+            <div id="authError" class="auth-error">Error message here</div>
+            <input type="email" id="authEmail" placeholder="Email Address">
+            <input type="password" id="authPassword" placeholder="Password">
+            <button class="btn-login" onclick="handleAuth('/api/auth/login')">Log In</button>
+            <button class="btn-signup" onclick="handleAuth('/api/auth/signup')">Sign Up</button>
+        </div>
+    </div>
+
+    <!-- MAIN APPLICATION (Hidden by default) -->
+    <div id="mainApp" class="app-container" style="display: none;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1 style="margin: 0; color: var(--text-main); font-weight: 800; letter-spacing: -1px;">Quest Board</h1>
+            <div style="display: flex; gap: 10px;">
+                <button id="themeToggle" onclick="toggleTheme()" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); font-size: 20px; padding: 8px 12px; border-radius: 8px; cursor: pointer;">🌙</button>
+                <button onclick="logout()" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--danger); font-size: 14px; font-weight: bold; padding: 8px 12px; border-radius: 8px; cursor: pointer;">Log Out</button>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <canvas id="avatarCanvas" width="80" height="80" style="background: var(--bg-color); border-radius: 10px; border: 1px solid var(--border-color);"></canvas>
+            <div class="stats">
+                
+                <!-- NEW: Personalized Header -->
+                <h2 style="margin: 0 0 10px 0; color: var(--primary); font-weight: 800;">
+                    <span id="userNameDisplay">Hero</span> 
+                    <span id="levelText" style="font-weight: 400; font-size: 14px; color: var(--text-muted);"> (lvl 1)</span>
+                </h2>
+                
+                <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 13px; color: var(--text-muted);">
+                    <span style="color: var(--danger);">HP</span> <span id="hpText">- / -</span>
+                </div>
+                <div class="bar-container"><div id="hpBar" class="hp-bar" style="width: 0%;"></div></div>
+                
+                <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 13px; color: var(--text-muted);">
+                    <span style="color: var(--success);">XP</span> <span id="xpText">- / -</span>
+                </div>
+                <div class="bar-container"><div id="xpBar" class="xp-bar" style="width: 0%;"></div></div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('daily')">Daily</button>
+            <button class="tab-btn" onclick="switchTab('weekly')">Weekly</button>
+            <button class="tab-btn" onclick="switchTab('todo')">To-Do</button>
+        </div>
+
+        <div class="forge-panel">
+            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <input type="text" id="newTaskName" class="forge-input" placeholder="Enter new quest..." style="flex-grow: 1; min-width: 200px;">
+                <input type="time" id="newTime" class="forge-input" title="Target Time">
+                <input type="date" id="newDate" class="forge-input" style="display: none;" title="Target Date">
+                <select id="newDifficulty" class="forge-input">
+                    <option value="Trivial">Trivial</option>
+                    <option value="Easy">Easy</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="Hard">Hard</option>
+                    <option value="Epic">Epic</option>
+                </select>
+                <button id="forgeBtn" class="forge-btn" onclick="addTask()">Forge</button>            
+            </div>
+            <div id="weeklyDaysContainer" style="display: none; gap: 15px; font-size: 14px; font-weight: 600; color: var(--text-muted); padding-left: 5px; align-items: center;">
+                <span>Select Days:</span>
+                <label><input type="checkbox" value="Mon" class="day-cb"> Mon</label>
+                <label><input type="checkbox" value="Tue" class="day-cb"> Tue</label>
+                <label><input type="checkbox" value="Wed" class="day-cb"> Wed</label>
+                <label><input type="checkbox" value="Thu" class="day-cb"> Thu</label>
+                <label><input type="checkbox" value="Fri" class="day-cb"> Fri</label>
+                <label><input type="checkbox" value="Sat" class="day-cb"> Sat</label>
+                <label><input type="checkbox" value="Sun" class="day-cb"> Sun</label>
+            </div>
+        </div>
+
+        <div class="forge-panel" style="flex-direction: row; justify-content: space-between; align-items: center;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <span style="font-size: 14px; font-weight: 600; color: var(--text-muted);">View:</span>
+                <select id="taskFilter" class="forge-input" onchange="renderTasks()" style="padding: 6px 10px;">
+                    <option value="all">All Quests</option>
+                    <option value="pending">Pending Only</option>
+                    <option value="completed">Completed Only</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <span style="font-size: 14px; font-weight: 600; color: var(--text-muted);">Sort:</span>
+                <select id="taskSort" class="forge-input" onchange="renderTasks()" style="padding: 6px 10px;">
+                    <option value="time">By Time</option>
+                    <option value="difficulty">By Difficulty (Hardest First)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="task-list" id="taskList"></div>
+    </div>
+
+    <script>
+        // --- THEME ENGINE ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        function applyTheme(isDark) {
+            document.body.classList.toggle('dark-mode', isDark);
+            themeToggleBtn.innerText = isDark ? '☀️' : '🌙';
+        }
+        function initTheme() {
+            const savedTheme = localStorage.getItem('habitTrackerTheme');
+            if (savedTheme !== null) applyTheme(savedTheme === 'dark'); 
+            else applyTheme(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        }
+        function toggleTheme() {
+            const newThemeIsDark = !document.body.classList.contains('dark-mode');
+            applyTheme(newThemeIsDark);
+            localStorage.setItem('habitTrackerTheme', newThemeIsDark ? 'dark' : 'light');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if (localStorage.getItem('habitTrackerTheme') === null) applyTheme(e.matches);
+        });
+        initTheme();
+
+        // --- AUTHENTICATION ENGINE ---
+        let currentEmail = localStorage.getItem('qb_email');
+
+        function checkAuth() {
+            if (currentEmail) {
+                document.getElementById('authScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                // Set the display name (Capitalize the part before the @ symbol)
+                let name = currentEmail.split('@')[0];
+                document.getElementById('userNameDisplay').innerText = name.charAt(0).toUpperCase() + name.slice(1);
+                fetchApp();
+            } else {
+                document.getElementById('authScreen').style.display = 'flex';
+                document.getElementById('mainApp').style.display = 'none';
+            }
+        }
+
+        // 1. Update handleAuth to store the token
+        async function handleAuth(endpoint) {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value.trim();
+            const errBox = document.getElementById('authError');
+            
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                if (endpoint.includes('login')) {
+                    // Store BOTH email and the secret token
+                    localStorage.setItem('qb_email', email);
+                    localStorage.setItem('qb_token', data.token); 
+                    currentEmail = email;
+                    checkAuth();
+                } else {
+                    alert("Account created! You can now log in.");
+                }
+            } else {
+                errBox.innerText = data.message;
+                errBox.style.display = "block";
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('qb_email');
+            localStorage.removeItem('qb_token');
+            currentEmail = null;
+            checkAuth();
+        }
+
+        // --- GAME ENGINE ---
+        let appData = {};
+        let currentTab = 'daily';
+
+        // Helper to securely fetch data by passing the User-Email header
+        function getHeaders() {
+            const token = localStorage.getItem('qb_token');
+            return { 
+                'Content-Type': 'application/json', 
+                'Authorization': `Bearer ${token}` 
+            };
+        }
+
+        async function fetchApp() {
+            if (!currentEmail) return;
+            try {
+                const response = await fetch('/api/data', { headers: getHeaders() });
+                if (response.status === 401) return logout(); // Kick them out if unauthorized
+                appData = await response.json();
+                updateDashboard();
+                renderTasks();
+            } catch (err) { console.error("Server error", err); }
+        }
+
+        function updateDashboard() {
+            const p = appData.player;
+            const max_xp = Math.floor(100 * Math.pow(1.10, p.level - 1));
+            
+            // Format is now handled by our split spans in the HTML
+            document.getElementById('levelText').innerText = ` (lvl ${p.level})`;
+            document.getElementById('hpText').innerText = `${p.hp} / ${p.max_hp}`;
+            document.getElementById('xpText').innerText = `${p.current_xp} / ${max_xp}`;
+            document.getElementById('hpBar').style.width = `${(p.hp / p.max_hp) * 100}%`;
+            document.getElementById('xpBar').style.width = `${(p.current_xp / max_xp) * 100}%`;
+            
+            drawAvatar(p.level);
+        }
+
+        function drawAvatar(level) {
+            const canvas = document.getElementById('avatarCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 80, 80);
+            
+            const x = null, k = "#1e293b", h = "#3E2723", s = "#FFCC80", w = "#FFFFFF", p = "#0D47A1", c = "#06b6d4", b = "#3b82f6", d = "#475569"; 
+            let matrix = [
+                [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
+                [x,x,x,x,x,k,k,k,k,k,k,x,x,x,x,x],
+                [x,x,x,x,k,h,h,h,h,h,h,k,x,x,x,x],
+                [x,x,x,k,h,h,h,h,h,h,h,h,k,x,x,x],
+                [x,x,x,k,h,k,w,p,s,w,p,k,h,k,x,x],
+                [x,x,x,k,h,s,s,s,s,s,s,h,k,x,x,x],
+                [x,x,x,x,k,s,s,s,s,s,s,k,x,x,x,x],
+                [x,x,x,x,x,k,k,k,k,k,k,x,x,x,x,x],
+                [x,x,x,x,k,c,c,c,c,c,c,k,x,x,x,x],
+                [x,x,x,k,s,k,c,c,c,c,k,s,k,x,x,x],
+                [x,x,x,k,s,k,c,c,c,c,k,s,k,x,x,x],
+                [x,x,x,k,s,k,b,b,b,b,k,s,k,x,x,x],
+                [x,x,x,x,k,k,b,b,b,b,k,k,x,x,x,x],
+                [x,x,x,x,k,b,b,k,k,b,b,k,x,x,x,x],
+                [x,x,x,x,k,b,b,k,k,b,b,k,x,x,x,x],
+                [x,x,x,x,k,d,d,k,k,d,d,k,x,x,x,x] 
+            ];
+
+            if (level >= 2) { const a = "#94a3b8"; for(let r=8; r<=11; r++) for(let col=5; col<=10; col++) matrix[r][col] = a; }
+            if (level >= 3) {
+                const blade = "#e2e8f0", hilt = "#fbbf24", handle = "#78350f";
+                matrix[4][1]=k; matrix[4][2]=k; matrix[5][1]=k; matrix[5][2]=blade; matrix[5][3]=k;
+                matrix[6][1]=k; matrix[6][2]=blade; matrix[6][3]=k; matrix[7][1]=k; matrix[7][2]=blade; matrix[7][3]=k;
+                matrix[8][0]=k; matrix[8][1]=hilt; matrix[8][2]=hilt; matrix[8][3]=hilt; matrix[8][4]=k;
+                matrix[9][1]=k; matrix[9][2]=handle; matrix[9][3]=k; matrix[10][1]=k; matrix[10][2]=k; matrix[10][3]=k;
+            }
+            if (level >= 4) { const g = "#fbbf24"; for(let r=8; r<=11; r++) for(let col=5; col<=10; col++) matrix[r][col] = g; }
+            if (level >= 5) {
+                const g = "#fbbf24", r = "#e11d48";
+                matrix[0][5]=k; matrix[0][7]=k; matrix[0][9]=k; 
+                matrix[1][4]=k; matrix[1][5]=g; matrix[1][6]=k; matrix[1][7]=g; matrix[1][8]=k; matrix[1][9]=g; matrix[1][10]=k;
+                matrix[2][4]=k; matrix[2][5]=g; matrix[2][6]=g; matrix[2][7]=r; matrix[2][8]=g; matrix[2][9]=g; matrix[2][10]=k;
+            }
+
+            for(let row=0; row<16; row++) {
+                for(let col=0; col<16; col++) {
+                    if (matrix[row][col]) {
+                        ctx.fillStyle = matrix[row][col];
+                        ctx.fillRect((col * 3) + 16, (row * 3) + 16, 3, 3);
+                    }
+                }
+            }
+        }
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('weeklyDaysContainer').style.display = (tabName === 'weekly') ? 'flex' : 'none';
+            document.getElementById('newDate').style.display = (tabName === 'todo') ? 'block' : 'none';
+            renderTasks();
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('taskList');
+            container.innerHTML = '';
+            
+            let tasksData = appData[currentTab] || {};
+            const filterValue = document.getElementById('taskFilter').value;
+            const sortValue = document.getElementById('taskSort').value;
+
+            let tasksArray = Object.entries(tasksData).map(([name, details]) => ({ name, details }));
+            if (filterValue === 'pending') tasksArray = tasksArray.filter(t => t.details.state !== 1);
+            else if (filterValue === 'completed') tasksArray = tasksArray.filter(t => t.details.state === 1);
+
+            let pending = tasksArray.filter(t => t.details.state !== 1);
+            let completed = tasksArray.filter(t => t.details.state === 1);
+
+            const diffWeight = { "Trivial": 1, "Easy": 2, "Medium": 3, "Hard": 4, "Epic": 5 };
+            pending.sort((a, b) => sortValue === 'difficulty' ? 
+                diffWeight[b.details.difficulty || 'Medium'] - diffWeight[a.details.difficulty || 'Medium'] : 
+                (a.details.target_time || '23:59').localeCompare(b.details.target_time || '23:59')
+            );
+            completed.sort((a, b) => (a.details.target_time || '23:59').localeCompare(b.details.target_time || '23:59'));
+
+            const finalTasks = pending.concat(completed);
+
+            if (finalTasks.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 40px 20px; font-style: italic; background: var(--bg-color); border-radius: 10px; border: 2px dashed var(--border-color);">No quests currently active in this view. <br><span style="font-size: 13px; opacity: 0.8; margin-top: 5px; display: inline-block;">Use the Forge above to create a new adventure!</span></div>`;
+                return; 
+            }
+
+            let taskIndex = 0; 
+            finalTasks.forEach(task => {
+                taskIndex++;
+                const { name: taskName, details } = task;
+                const div = document.createElement('div');
+                div.className = 'task-item' + (details.state === -1 ? ' failed' : '');
+                
+                let tags = `[${details.difficulty || 'Medium'}]`;
+                if (currentTab === 'weekly' && details.days) tags += ` (${details.days.join(', ')})`;
+                if (details.target_time) tags += ` ⏳ ${details.target_time}`;
+                if (details.target_date) tags += ` 📅 ${details.target_date}`;
+                if (details.state === -1) tags += ` (FAILED)`;
+
+                const checked = details.state === 1 ? 'checked' : '';
+                const disabled = details.state === -1 ? 'disabled' : '';
+                const safeName = taskName.replace(/'/g, "\\'"); 
+                const completedStyle = details.state === 1 ? 'opacity: 0.5; text-decoration: line-through;' : '';
+
+                div.innerHTML = `
+                    <div style="display: flex; align-items: center; width: 100%; ${completedStyle}">
+                        <input type="checkbox" ${checked} ${disabled} onchange="toggleTask('${currentTab}', '${safeName}', this.checked)">
+                        <span style="font-weight: 600;">${taskName} <span class="tags">${tags}</span></span>
+                        <div class="task-actions">
+                            <button class="kebab-btn" onclick="toggleMenu(${taskIndex}, event)">⋮</button>
+                            <div id="menu-${taskIndex}" class="dropdown-menu">
+                                <div class="dropdown-item" onclick="triggerEdit('${currentTab}', '${safeName}')">Edit Task</div>
+                                <div class="dropdown-item danger" onclick="deleteTask('${currentTab}', '${safeName}')">Delete Task</div>
+                            </div>
+                        </div>
+                    </div>`;
+                container.appendChild(div);
+            });
+        }
+
+        async function toggleTask(category, taskName, isChecked) {
+            const res = await fetch('/api/task/toggle', {
+                method: 'POST', headers: getHeaders(),
+                body: JSON.stringify({ category, task_name: taskName, state: isChecked ? 1 : 0 })
+            });
+            if (res.ok) fetchApp(); 
+        }
+
+        let editingTaskName = null; 
+        async function addTask() {
+            const input = document.getElementById('newTaskName');
+            const difficulty = document.getElementById('newDifficulty').value;
+            const timeStr = document.getElementById('newTime').value;
+            const taskName = input.value.trim();
+            if (!taskName) return alert("Quest name cannot be empty!");
+
+            let daysArray = [];
+            if (currentTab === 'weekly') document.querySelectorAll('.day-cb:checked').forEach(cb => daysArray.push(cb.value));
+            const dateStr = (currentTab === 'todo') ? document.getElementById('newDate').value : null;
+
+            input.disabled = true;
+            const endpoint = editingTaskName ? '/api/task/edit' : '/api/task/add';
+            const payload = { category: currentTab, difficulty, target_time: timeStr || null, days: daysArray.length > 0 ? daysArray : null, target_date: dateStr || null };
+            
+            if (editingTaskName) { payload.old_name = editingTaskName; payload.new_name = taskName; } 
+            else { payload.task_name = taskName; }
+
+            const res = await fetch(endpoint, { method: 'POST', headers: getHeaders(), body: JSON.stringify(payload) });
+
+            if (res.ok) {
+                input.value = ''; document.getElementById('newTime').value = ''; document.getElementById('newDate').value = ''; 
+                document.querySelectorAll('.day-cb').forEach(cb => cb.checked = false);
+                editingTaskName = null;
+                const forgeBtn = document.getElementById('forgeBtn');
+                forgeBtn.innerText = "Forge"; forgeBtn.style.backgroundColor = "var(--success)";
+                fetchApp(); 
+            } else alert("Action failed. A quest with that name might already exist.");
+            input.disabled = false;
+        }
+
+        function toggleMenu(index, event) {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('show'));
+            document.getElementById(`menu-${index}`).classList.toggle('show');
+            event.stopPropagation();
+        }
+
+        document.addEventListener('click', () => document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('show')));
+
+        async function deleteTask(category, taskName) {
+            if (!confirm(`Are you sure you want to permanently delete "${taskName}"?`)) return;
+            const res = await fetch('/api/task/delete', { method: 'POST', headers: getHeaders(), body: JSON.stringify({ category, task_name: taskName }) });
+            if (res.ok) fetchApp();
+        }
+
+        function triggerEdit(category, taskName) {
+            editingTaskName = taskName;
+            const details = appData[category][taskName];
+            document.getElementById('newTaskName').value = taskName;
+            document.getElementById('newDifficulty').value = details.difficulty || 'Medium';
+            document.getElementById('newTime').value = details.target_time || '';
+            document.getElementById('newDate').value = details.target_date || '';
+            document.querySelectorAll('.day-cb').forEach(cb => cb.checked = (details.days && details.days.includes(cb.value)));
+            
+            const forgeBtn = document.getElementById('forgeBtn');
+            forgeBtn.innerText = "Save Edit"; forgeBtn.style.backgroundColor = "var(--warning)";
+            window.scrollTo(0, 0); 
+        }
+
+        // Boot Sequence
+        checkAuth();
+    </script>
+</body>
+</html>

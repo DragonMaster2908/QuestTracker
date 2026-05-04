@@ -4,20 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quest Board</title>
-    <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#bb86fc">
-    
+    <meta name="theme-color" content="#0f172a">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* Unified Desktop Theme Colors */
         :root {
-            --primary: #bb86fc;
-            --bg: #121212;
-            --card-bg: #1e1e1e;
-            --text: #e1e1e1;
-            --danger: #cf6679;
-            --success: #03dac6;
-            --warning: #f1c40f;
+            --bg: #0f172a; 
+            --card-bg: #1e293b;
+            --primary: #8b5cf6; 
+            --success: #10b981; 
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+
+        /* Fully Functional Light Mode */
+        body.light-mode {
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --primary: #6d28d9;
+            --success: #059669;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
         }
 
         body {
@@ -27,71 +41,66 @@
             margin: 0;
             padding: 15px;
             overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        /* Responsive Container */
-        #app { max-width: 600px; margin: 0 auto; }
+        #app { max-width: 800px; margin: 0 auto; }
 
-        /* Full Original CSS Restored */
         .task-item {
             background: var(--card-bg);
             margin: 12px 0;
             padding: 16px;
             border-radius: 12px;
             display: flex;
-            flex-direction: column;
-            gap: 12px;
-            border-left: 4px solid var(--primary);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        @media (min-width: 480px) {
-            .task-item { flex-direction: row; align-items: center; justify-content: space-between; }
-        }
-
-        .task-info { 
-            flex: 1; 
-            min-width: 0; 
-            width: 100%; 
-        }
+        .task-info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 15px; }
+        
         .task-name { 
             font-weight: 600; 
             font-size: 1.1rem; 
             word-wrap: break-word; 
-            overflow-wrap: break-word; 
-            display: block;
+            overflow-wrap: break-word;
         }
+
         .tags {
             font-size: 0.85rem;
-            color: var(--primary);
+            color: var(--text-muted);
             display: flex;
-            flex-wrap: wrap; /* This ensures items drop to the next line */
-            gap: 8px;
-            margin-top: 4px;
-            word-break: break-all; /* Fixes overflow for long day lists like Mon,Tue,Wed... */
+            flex-wrap: wrap; 
+            gap: 15px;
+            align-items: center;
         }
 
         .forge-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 15px; }
         .input-label { font-size: 11px; font-weight: bold; color: var(--primary); text-transform: uppercase; }
 
         input, select {
-            background: #2c2c2c;
-            border: 1px solid #444;
-            color: white;
+            background: var(--bg);
+            border: 1px solid var(--border-color);
+            color: var(--text);
             padding: 12px;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 16px; 
+            outline: none;
         }
+        
+        input:focus, select:focus { border-color: var(--primary); }
 
         .notif-banner {
-            background: #2a2a2a;
-            padding: 10px;
+            background: var(--card-bg);
+            padding: 10px 15px;
             border-radius: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
             font-size: 0.9rem;
+            border: 1px solid var(--primary);
         }
 
         #toast {
@@ -100,100 +109,124 @@
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            background: #333;
+            background: var(--card-bg);
+            color: var(--text);
             padding: 12px 24px;
             border-radius: 50px;
-            border-left: none;
+            border: 1px solid var(--border-color);
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
             z-index: 10000;
         }
 
-        /* Original Tab and Button Styles */
-        .tab-btn { padding: 10px 20px; border: none; background: #252525; color: white; cursor: pointer; border-radius: 20px; }
-        .tab-btn.active { background: var(--primary); color: black; font-weight: bold; }
+        .tab-btn { 
+            flex: 1; 
+            padding: 12px; 
+            border: 1px solid var(--border-color); 
+            background: var(--card-bg); 
+            color: var(--text-muted); 
+            cursor: pointer; 
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+        .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
         
-        .kebab-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
-        .dropdown-menu { display: none; position: absolute; background: #2c2c2c; border: 1px solid #444; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 1000; }
+        /* Edit Option (Kebab) CSS restored */
+        .kebab-btn { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; padding: 0 10px; }
+        .dropdown-menu { display: none; position: absolute; right: 0; top: 30px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 1000; min-width: 120px; }
         .dropdown-menu.show { display: block; }
-        .dropdown-item { padding: 10px 20px; cursor: pointer; }
-        .dropdown-item:hover { background: #333; }
+        .dropdown-item { padding: 12px 20px; cursor: pointer; color: var(--text); font-size: 0.9rem; }
+        .dropdown-item:hover { background: var(--bg); }
         .dropdown-item.danger { color: var(--danger); }
-
-        /* Full Dark Mode Theme Engine CSS */
-        body.dark-mode { --bg: #121212; --card-bg: #1e1e1e; --text: #e1e1e1; }
-        body.light-mode { --bg: #f3f4f6; --card-bg: #ffffff; --text: #1f2937; }
+        
+        /* Filter Bar */
+        .filter-bar {
+            display: flex; 
+            justify-content: space-between; 
+            background: var(--card-bg); 
+            padding: 10px 20px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+            border: 1px solid var(--border-color);
+        }
     </style>
 </head>
 <body>
 
 <div id="app">
-    <!-- Full Auth Screen Restored -->
     <div id="authScreen" style="display: none; flex-direction: column; align-items: center; justify-content: center; height: 80vh;">
-        <h2 style="color: var(--primary);">QUEST BOARD</h2>
-        <div style="background: var(--card-bg); padding: 30px; border-radius: 15px; display: flex; flex-direction: column; gap: 15px; width: 300px;">
+        <h2 style="color: var(--text);">Quest Board</h2>
+        <div style="background: var(--card-bg); padding: 30px; border-radius: 15px; display: flex; flex-direction: column; gap: 15px; width: 300px; border: 1px solid var(--border-color);">
             <input type="email" id="authEmail" placeholder="Email">
             <input type="password" id="authPassword" placeholder="Password">
-            <button onclick="handleAuth('/api/auth/login')" style="background: var(--primary); border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">LOGIN</button>
-            <button onclick="handleAuth('/api/auth/signup')" style="background: none; border: 1px solid var(--primary); color: var(--primary); padding: 12px; border-radius: 8px; cursor: pointer;">SIGN UP</button>
+            <button onclick="handleAuth('/api/auth/login')" style="background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">Log In</button>
+            <button onclick="handleAuth('/api/auth/signup')" style="background: none; border: 1px solid var(--border-color); color: var(--text); padding: 12px; border-radius: 8px; cursor: pointer;">Sign Up</button>
             <p id="authError" style="color: var(--danger); display: none; font-size: 0.8rem; text-align: center;"></p>
         </div>
     </div>
 
-    <!-- Main App Restored -->
     <div id="mainApp" style="display: none;">
         <div id="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 id="userNameDisplay">Welcome</h2>
+            <h2 id="userNameDisplay" style="margin: 0;">Welcome</h2>
             <div style="display: flex; gap: 15px; align-items: center;">
-                <button onclick="requestNotificationPermission()" id="notifBtn" style="background: none; border: none; color: var(--primary); font-size: 1.2rem; cursor: pointer;">
+                <button onclick="requestNotificationPermission()" id="notifBtn" style="background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer;">
                     <i class="fa-regular fa-bell"></i>
                 </button>
                 <button id="themeToggle" onclick="toggleTheme()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">🌙</button>
-                <i class="fa-solid fa-right-from-bracket" onclick="logout()" style="cursor: pointer; opacity: 0.7;"></i>
+                <button onclick="logout()" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">Log Out</button>
             </div>
         </div>
 
-        <!-- Notification Setup Banner -->
         <div id="notifBanner" class="notif-banner" style="display: none;">
-            <span>Enable mobile alerts for tasks?</span>
-            <button onclick="requestNotificationPermission()" style="background: var(--primary); border: none; color: black; padding: 5px 10px; border-radius: 4px; font-weight: bold;">Enable</button>
+            <span>Enable mobile alerts for quests?</span>
+            <button onclick="requestNotificationPermission()" style="background: var(--primary); border: none; color: white; padding: 5px 15px; border-radius: 4px; font-weight: bold;">Enable</button>
         </div>
 
-        <!-- Full Original Dashboard with Avatar -->
-        <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; display: flex; gap: 20px; align-items: center; margin-bottom: 25px;">
-            <canvas id="avatarCanvas" width="80" height="80" style="image-rendering: pixelated;"></canvas>
+        <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; display: flex; gap: 20px; align-items: center; margin-bottom: 20px; border: 1px solid var(--border-color);">
+            <div style="background: var(--bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <canvas id="avatarCanvas" width="80" height="80" style="image-rendering: pixelated;"></canvas>
+            </div>
             <div style="flex: 1;">
-                <div style="font-weight: bold; margin-bottom: 10px;">Hero Stats <span id="levelText" style="color: var(--primary);"></span></div>
-                <div class="input-label">HP: <span id="hpText"></span></div>
-                <div style="background: #333; height: 10px; border-radius: 5px; margin-bottom: 10px; overflow: hidden;">
+                <div style="font-weight: bold; margin-bottom: 8px; color: var(--primary); display: flex; justify-content: space-between;">
+                    <span id="heroName">Hero</span>
+                    <span id="levelText"></span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--danger); font-weight: bold; margin-bottom: 2px;">
+                    <span>HP</span> <span id="hpText"></span>
+                </div>
+                <div style="background: var(--bg); height: 10px; border-radius: 5px; margin-bottom: 12px; overflow: hidden; border: 1px solid var(--border-color);">
                     <div id="hpBar" style="background: var(--danger); height: 100%; width: 0%;"></div>
                 </div>
-                <div class="input-label">XP: <span id="xpText"></span></div>
-                <div style="background: #333; height: 10px; border-radius: 5px; overflow: hidden;">
-                    <div id="xpBar" style="background: var(--primary); height: 100%; width: 0%;"></div>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--success); font-weight: bold; margin-bottom: 2px;">
+                    <span>XP</span> <span id="xpText"></span>
+                </div>
+                <div style="background: var(--bg); height: 10px; border-radius: 5px; overflow: hidden; border: 1px solid var(--border-color);">
+                    <div id="xpBar" style="background: var(--success); height: 100%; width: 0%;"></div>
                 </div>
             </div>
         </div>
 
-        <!-- The Forge (Task Input) -->
-        <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; margin-bottom: 25px;">
-            <div class="forge-group">
-                <label class="input-label">Quest Name</label>
-                <input type="text" id="newTaskName" placeholder="What is the objective?">
+        <div class="tabs" style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <button class="tab-btn active" onclick="switchTab('daily')">Daily</button>
+            <button class="tab-btn" onclick="switchTab('weekly')">Weekly</button>
+            <button class="tab-btn" onclick="switchTab('todo')">To-Do</button>
+        </div>
+
+        <!-- The Forge -->
+        <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color);">
+            <input type="text" id="newTaskName" placeholder="Enter new quest..." style="width: 100%; box-sizing: border-box; margin-bottom: 15px;">
+            
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <input type="time" id="newTime" style="flex: 1; min-width: 120px;">
+                <input type="date" id="newDate" style="display: none; flex: 1; min-width: 150px;">
+                <select id="newDifficulty" style="flex: 1; min-width: 120px;">
+                    <option>Trivial</option><option>Easy</option><option selected>Medium</option><option>Hard</option><option>Epic</option>
+                </select>
+                <button id="forgeBtn" onclick="addTask()" style="background: var(--success); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer;">Forge</button>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div class="forge-group">
-                    <label class="input-label">Difficulty</label>
-                    <select id="newDifficulty">
-                        <option>Trivial</option><option>Easy</option><option selected>Medium</option><option>Hard</option><option>Epic</option>
-                    </select>
-                </div>
-                <div class="forge-group">
-                    <label class="input-label">Time</label>
-                    <input type="time" id="newTime">
-                </div>
-            </div>
-            <input type="date" id="newDate" style="display: none; margin-bottom: 15px; width: 100%; box-sizing: border-box;">
-            <div id="weeklyDaysContainer" style="display: none; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+            
+            <div id="weeklyDaysContainer" style="display: none; gap: 10px; margin-top: 15px; flex-wrap: wrap; color: var(--text-muted); font-size: 0.9rem;">
                 <label><input type="checkbox" class="day-cb" value="Mon"> Mon</label>
                 <label><input type="checkbox" class="day-cb" value="Tue"> Tue</label>
                 <label><input type="checkbox" class="day-cb" value="Wed"> Wed</label>
@@ -202,16 +235,25 @@
                 <label><input type="checkbox" class="day-cb" value="Sat"> Sat</label>
                 <label><input type="checkbox" class="day-cb" value="Sun"> Sun</label>
             </div>
-            <button id="forgeBtn" onclick="addTask()" style="width: 100%; background: var(--success); color: black; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">FORGE QUEST</button>
         </div>
 
-        <!-- View Controls -->
-        <div class="tabs" style="display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px;">
-            <button class="tab-btn active" onclick="switchTab('daily')">Dailies</button>
-            <button class="tab-btn" onclick="switchTab('weekly')">Weeklies</button>
-            <button class="tab-btn" onclick="switchTab('todo')">To-Do</button>
-            <select id="taskFilter" onchange="renderTasks()" style="padding: 5px; border-radius: 20px;"><option value="all">All</option><option value="pending">Pending</option><option value="completed">Done</option></select>
-            <select id="taskSort" onchange="renderTasks()" style="padding: 5px; border-radius: 20px;"><option value="time">By Time</option><option value="difficulty">By Rank</option></select>
+        <!-- Filter Bar Separated from Tabs -->
+        <div class="filter-bar">
+            <div>
+                <span style="color: var(--text-muted); font-size: 0.9rem; margin-right: 5px;">View:</span>
+                <select id="taskFilter" onchange="renderTasks()" style="background: transparent; border: none; color: var(--text); padding: 0;">
+                    <option value="all">All Quests</option>
+                    <option value="pending">Pending</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+            <div>
+                <span style="color: var(--text-muted); font-size: 0.9rem; margin-right: 5px;">Sort:</span>
+                <select id="taskSort" onchange="renderTasks()" style="background: transparent; border: none; color: var(--text); padding: 0;">
+                    <option value="time">By Time</option>
+                    <option value="difficulty">By Rank</option>
+                </select>
+            </div>
         </div>
 
         <div id="taskList"></div>
@@ -225,15 +267,17 @@
     let appData = {};
     let currentTab = 'daily';
     let currentEmail = localStorage.getItem('qb_email');
+    let editingTaskName = null;
 
-    // 1. Full PWA Engine
+    // 1. Force PWA Update
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js');
+            navigator.serviceWorker.register('/sw.js').then(reg => {
+                reg.update(); // Forces the browser to check for new notification logic
+            });
         });
     }
 
-    // 2. Toast System
     function showStatus(msg, isError = false) {
         const toast = document.getElementById('toast');
         const msgEl = document.getElementById('toastMsg');
@@ -243,7 +287,7 @@
         setTimeout(() => toast.style.display = 'none', 3000);
     }
 
-    // 3. FULL PIXEL ART MATRIX RESTORED
+    // --- FULL PIXEL ART MATRIX ---
     function drawAvatar(level) {
         const canvas = document.getElementById('avatarCanvas');
         const ctx = canvas.getContext('2d');
@@ -269,7 +313,6 @@
             [x,x,x,x,k,d,d,k,k,d,d,k,x,x,x,x] 
         ];
 
-        // Equipment logic
         if (level >= 2) { const a = "#94a3b8"; for(let r=8; r<=11; r++) for(let col=5; col<=10; col++) matrix[r][col] = a; }
         if (level >= 3) {
             const blade = "#e2e8f0", hilt = "#fbbf24", handle = "#78350f";
@@ -296,7 +339,7 @@
         }
     }
 
-    // 4. Notification Handshake Logic
+    // --- NOTIFICATIONS ---
     function urlBase64ToUint8Array(base64String) {
         const padding = '='.repeat((4 - base64String.length % 4) % 4);
         const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -310,8 +353,6 @@
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
             const registration = await navigator.serviceWorker.ready;
-            
-            // Clean up old subscriptions
             const existing = await registration.pushManager.getSubscription();
             if (existing) await existing.unsubscribe();
 
@@ -322,28 +363,21 @@
 
             const response = await fetch('/api/save-subscription', {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('qb_token')}`
-                },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('qb_token')}` },
                 body: JSON.stringify(subscription)
             });
 
             if (response.ok) {
-                showStatus("Alerts fully synced!");
+                showStatus("Alerts synced!");
                 document.getElementById('notifBanner').style.display = 'none';
+                document.getElementById('notifBtn').style.color = 'var(--primary)';
             }
-        } else {
-            showStatus("Permission denied", true);
         }
     }
 
-    // 5. Original Game Engine Logic
+    // --- ENGINE ---
     function getHeaders() {
-        return { 
-            'Content-Type': 'application/json', 
-            'Authorization': `Bearer ${localStorage.getItem('qb_token')}` 
-        };
+        return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('qb_token')}` };
     }
 
     async function fetchApp() {
@@ -357,7 +391,7 @@
     function updateDashboard() {
         const p = appData.player;
         const max_xp = Math.floor(100 * Math.pow(1.10, p.level - 1));
-        document.getElementById('levelText').innerText = ` (Lvl ${p.level})`;
+        document.getElementById('levelText').innerText = `(Lvl ${p.level})`;
         document.getElementById('hpText').innerText = `${p.hp} / ${p.max_hp}`;
         document.getElementById('xpText').innerText = `${p.current_xp} / ${max_xp}`;
         document.getElementById('hpBar').style.width = `${(p.hp / p.max_hp) * 100}%`;
@@ -365,31 +399,59 @@
         drawAvatar(p.level);
     }
 
+    function toggleMenu(index, event) {
+        document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('show'));
+        document.getElementById(`menu-${index}`).classList.toggle('show');
+        event.stopPropagation();
+    }
+    document.addEventListener('click', () => document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show')));
+
     function renderTasks() {
         const container = document.getElementById('taskList');
         container.innerHTML = '';
         let tasksData = appData[currentTab] || {};
         const filter = document.getElementById('taskFilter').value;
+        const sortValue = document.getElementById('taskSort').value;
 
-        Object.entries(tasksData).forEach(([name, details], index) => {
-            if (filter === 'pending' && details.state === 1) return;
-            if (filter === 'completed' && details.state !== 1) return;
+        let tasksArray = Object.entries(tasksData).map(([name, details]) => ({ name, details }));
+        if (filter === 'pending') tasksArray = tasksArray.filter(t => t.details.state !== 1);
+        else if (filter === 'completed') tasksArray = tasksArray.filter(t => t.details.state === 1);
 
+        const diffWeight = { "Trivial": 1, "Easy": 2, "Medium": 3, "Hard": 4, "Epic": 5 };
+        tasksArray.sort((a, b) => {
+            if (sortValue === 'difficulty') return diffWeight[b.details.difficulty || 'Medium'] - diffWeight[a.details.difficulty || 'Medium'];
+            return (a.details.target_time || '23:59').localeCompare(b.details.target_time || '23:59');
+        });
+
+        tasksArray.forEach((task, index) => {
+            const { name, details } = task;
             const div = document.createElement('div');
             div.className = 'task-item' + (details.state === 1 ? ' completed' : '');
             
-            let tags = `Rank: ${details.difficulty}`;
-            if (details.target_time) tags += ` | ⏳ ${details.target_time}`;
-            if (details.target_date) tags += ` | 📅 ${details.target_date}`;
+            let tagsHTML = `<span style="color: var(--text-muted);">[${details.difficulty}]</span>`;
+            if (details.target_time) tagsHTML += `<span><i class="fa-regular fa-clock"></i> ${details.target_time}</span>`;
+            if (details.target_date) tagsHTML += `<span><i class="fa-regular fa-calendar"></i> ${details.target_date}</span>`;
+            if (currentTab === 'weekly' && details.days) tagsHTML += `<span><i class="fa-solid fa-repeat"></i> ${details.days.join(', ')}</span>`;
+
+            // Escape quotes for JS calls
+            const safeName = name.replace(/'/g, "\\'"); 
 
             div.innerHTML = `
-                <div class="task-info">
-                    <div class="task-name" style="${details.state === 1 ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${name}</div>
-                    <div class="tags">${tags}</div>
-                </div>
                 <div style="display: flex; align-items: center; gap: 15px;">
-                    <input type="checkbox" ${details.state === 1 ? 'checked' : ''} onchange="toggleTask('${currentTab}', '${name}', this.checked)" style="transform: scale(1.5);">
-                    <i class="fa-solid fa-trash" onclick="deleteTask('${currentTab}', '${name}')" style="color: var(--danger); cursor: pointer;"></i>
+                    <input type="checkbox" ${details.state === 1 ? 'checked' : ''} 
+                           onchange="toggleTask('${currentTab}', '${safeName}', this.checked)" 
+                           style="width: 22px; height: 22px; accent-color: var(--success); cursor: pointer;">
+                </div>
+                <div class="task-info" style="${details.state === 1 ? 'opacity: 0.5; text-decoration: line-through;' : ''}">
+                    <span class="task-name" style="margin-right: 15px;">${name}</span>
+                    <div class="tags">${tagsHTML}</div>
+                </div>
+                <div class="task-actions" style="position: relative;">
+                    <button class="kebab-btn" onclick="toggleMenu(${index}, event)">⋮</button>
+                    <div id="menu-${index}" class="dropdown-menu">
+                        <div class="dropdown-item" onclick="triggerEdit('${currentTab}', '${safeName}')">Edit Task</div>
+                        <div class="dropdown-item danger" onclick="deleteTask('${currentTab}', '${safeName}')">Delete Task</div>
+                    </div>
                 </div>
             `;
             container.appendChild(div);
@@ -405,12 +467,12 @@
     }
 
     async function addTask() {
-        const name = document.getElementById('newTaskName').value.trim();
+        const nameInput = document.getElementById('newTaskName');
+        const name = nameInput.value.trim();
         if (!name) return alert("Quest name required!");
         
         const payload = {
             category: currentTab,
-            task_name: name,
             difficulty: document.getElementById('newDifficulty').value,
             target_time: document.getElementById('newTime').value || null
         };
@@ -420,12 +482,38 @@
             payload.days = Array.from(document.querySelectorAll('.day-cb:checked')).map(cb => cb.value);
         }
 
-        const res = await fetch('/api/task/add', { method: 'POST', headers: getHeaders(), body: JSON.stringify(payload) });
+        const endpoint = editingTaskName ? '/api/task/edit' : '/api/task/add';
+        if (editingTaskName) { payload.old_name = editingTaskName; payload.new_name = name; } 
+        else { payload.task_name = name; }
+
+        const res = await fetch(endpoint, { method: 'POST', headers: getHeaders(), body: JSON.stringify(payload) });
         if (res.ok) {
-            document.getElementById('newTaskName').value = '';
+            nameInput.value = '';
+            document.getElementById('newTime').value = '';
+            document.getElementById('newDate').value = '';
+            document.querySelectorAll('.day-cb').forEach(cb => cb.checked = false);
+            editingTaskName = null;
+            
+            const btn = document.getElementById('forgeBtn');
+            btn.innerText = "Forge"; btn.style.background = "var(--success)";
+            
             fetchApp();
             showStatus("Quest Forged!");
         }
+    }
+
+    function triggerEdit(category, taskName) {
+        editingTaskName = taskName;
+        const details = appData[category][taskName];
+        document.getElementById('newTaskName').value = taskName;
+        document.getElementById('newDifficulty').value = details.difficulty || 'Medium';
+        document.getElementById('newTime').value = details.target_time || '';
+        document.getElementById('newDate').value = details.target_date || '';
+        document.querySelectorAll('.day-cb').forEach(cb => cb.checked = (details.days && details.days.includes(cb.value)));
+        
+        const forgeBtn = document.getElementById('forgeBtn');
+        forgeBtn.innerText = "Save Edit"; forgeBtn.style.background = "var(--warning)";
+        window.scrollTo(0, 0); 
     }
 
     async function deleteTask(category, name) {
@@ -443,15 +531,16 @@
         renderTasks();
     }
 
-    // 6. Dynamic Auth and Theme Logic
+    // --- AUTH & THEME ---
     function checkAuth() {
         if (currentEmail) {
             document.getElementById('authScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             
-            // SET DYNAMIC USERNAME FROM EMAIL
             let name = currentEmail.split('@')[0];
-            document.getElementById('userNameDisplay').innerText = "Welcome, " + name.charAt(0).toUpperCase() + name.slice(1);
+            let capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
+            document.getElementById('userNameDisplay').innerText = "Quest Board";
+            document.getElementById('heroName').innerText = capitalizedName;
             
             fetchApp();
         } else {
@@ -474,9 +563,7 @@
                 localStorage.setItem('qb_token', data.token);
                 currentEmail = email;
                 checkAuth();
-            } else {
-                alert("Account created! Log in now.");
-            }
+            } else { alert("Account created! Log in now."); }
         } else {
             const err = document.getElementById('authError');
             err.innerText = data.message; err.style.display = 'block';
@@ -487,13 +574,15 @@
 
     function toggleTheme() {
         const body = document.body;
-        const isDark = body.classList.toggle('dark-mode');
-        localStorage.setItem('habitTrackerTheme', isDark ? 'dark' : 'light');
-        document.getElementById('themeToggle').innerText = isDark ? '☀️' : '🌙';
+        const isLight = body.classList.toggle('light-mode');
+        localStorage.setItem('qb_theme', isLight ? 'light' : 'dark');
+        document.getElementById('themeToggle').innerText = isLight ? '🌙' : '☀️';
     }
 
-    // Init Theme
-    if (localStorage.getItem('habitTrackerTheme') === 'dark') document.body.classList.add('dark-mode');
+    if (localStorage.getItem('qb_theme') === 'light') {
+        document.body.classList.add('light-mode');
+        document.getElementById('themeToggle').innerText = '🌙';
+    }
 
     checkAuth();
 </script>

@@ -1,8 +1,9 @@
 import os
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from supabase import create_client
 from dotenv import load_dotenv
-from flask import send_from_directory
+from datetime import datetime
+import pytz
 
 # Initialize Flask
 app = Flask(__name__)
@@ -88,7 +89,28 @@ def login():
 def get_data():
     email = get_verified_email()
     if not email: return jsonify({"status": "error", "message": "Unauthorized"}), 401
-    return jsonify(load_data(email))
+    
+    data = load_data(email)
+    
+    # EOD CLEANUP FOR TO-DO TASKS
+    today = datetime.now().strftime("%Y-%m-%d")
+    todos = data.get("todo", {})
+    to_delete = []
+    
+    for t_name, details in todos.items():
+        if details.get("state") == 1:
+            comp_date = details.get("completed_date")
+            # If it has a date and it is NOT today, mark it for deletion
+            if comp_date and comp_date != today:
+                to_delete.append(t_name)
+    
+    # Delete the old ones and save if any were swept
+    if to_delete:
+        for t_name in to_delete:
+            del data["todo"][t_name]
+        save_data(data, email)
+
+    return jsonify(data)
 
 @app.route('/api/task/toggle', methods=['POST'])
 def toggle_task():
@@ -103,6 +125,11 @@ def toggle_task():
         current_state = data[category][task_name].get("state", 0)
         data[category][task_name]["state"] = state
         
+        # When checking it off, add today's date so we know when to delete it later
+        if state == 1:
+            data[category][task_name]["completed_date"] = datetime.now().strftime("%Y-%m-%d")
+        
+        # Original XP Logic
         if current_state != 1 and state == 1:
             diff = data[category][task_name].get("difficulty", "Medium")
             xp_map = {"Trivial": 5, "Easy": 10, "Medium": 20, "Hard": 40, "Epic": 100}

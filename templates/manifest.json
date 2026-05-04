@@ -1,0 +1,15 @@
+{
+  "name": "Quest Board",
+  "short_name": "Quests",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#6200ee",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/536/536034.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
